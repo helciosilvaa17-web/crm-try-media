@@ -1,0 +1,38 @@
+.app-layout {
+  width: 100%;
+  min-height: 100vh;
+  background: var(--bg);
+  position: relative;
+}
+
+/* Fundo desfocado */
+.app-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.1;
+  filter: blur(30px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Área de conteúdo */
+.app-main {
+  position: fixed;
+  top: var(--navbar-height);
+  left: var(--sidebar-w);
+  width: calc(100% - var(--sidebar-w));
+  height: calc(100vh - var(--navbar-height));
+  overflow-y: auto;
+  padding: 40px;
+  transition: left var(--transition), width var(--transition);
+  z-index: 1;
+}
+
+.app-main.expandido {
+  left: var(--sidebar-w-open);
+  width: calc(100% - var(--sidebar-w-open));
+}

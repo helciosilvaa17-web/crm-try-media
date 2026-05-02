@@ -1,0 +1,140 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+/* ================================
+   DESIGN TOKENS — TRY MEDIA CRM
+================================ */
+:root {
+  /* Cores base */
+  --bg:               rgb(8, 21, 12);
+  --sidebar-bg:       rgba(4, 13, 6, 0.589);
+  --sidebar-border:   rgba(196, 253, 210, 0.657);
+  --glass:            rgba(172, 193, 178, 0.173);
+  --glass-border:     rgba(255, 255, 255, 0.354);
+
+  /* Navbar / Header */
+  --navbar-bg:        rgba(17, 42, 24, 0.276);
+  --navbar-height:    95px;
+
+  /* Sidebar */
+  --sidebar-w:        80px;
+  --sidebar-w-open:   300px;
+  --active-bg:        #041e4f;
+
+  /* Accent */
+  --accent:           #d7fcea;
+  --accent-dark:      #33513c;
+  --accent-hover:     rgba(215, 252, 234, 0.15);
+
+  /* Tabela */
+  --table-bg:         rgba(1, 21, 19, 0.841);
+  --table-header-bg:  rgba(12, 33, 90, 0.762);
+  --table-border:     rgba(255, 255, 255, 0.08);
+  --row-hover:        rgba(255, 255, 255, 0.05);
+
+  /* Texto */
+  --text:             aliceblue;
+  --text-muted:       rgba(200, 220, 210, 0.6);
+
+  /* Status badges */
+  --badge-fechado:    #d7fcea;
+  --badge-negociacao: #ffe8a3;
+  --badge-progresso:  #ffd0a6;
+  --badge-qualificado:#d9d0ff;
+  --badge-contacto:   #cce7ff;
+  --badge-novo:       #dddddd;
+
+  /* Transições */
+  --transition:       0.4s ease;
+  --transition-fast:  0.2s ease;
+
+  /* Tipografia */
+  --font:             'Inter', sans-serif;
+
+  /* Border radius */
+  --radius:           20px;
+  --radius-sm:        12px;
+  --radius-xs:        8px;
+  --radius-pill:      40px;
+}
+
+/* ================================
+   RESET
+================================ */
+*, *::before, *::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--text);
+  width: 100%;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+  border: none;
+  font-family: var(--font);
+}
+
+input, select, textarea {
+  font-family: var(--font);
+}
+
+ul {
+  list-style: none;
+}
+
+/* ================================
+   STATUS BADGES (globais)
+================================ */
+.badge {
+  display: inline-block;
+  padding: 5px 14px;
+  border-radius: var(--radius-pill);
+  font-size: 12px;
+  font-weight: 600;
+  color: #000;
+}
+.badge.fechado    { background: var(--badge-fechado); }
+.badge.negociacao { background: var(--badge-negociacao); }
+.badge.progresso  { background: var(--badge-progresso); }
+.badge.qualificado{ background: var(--badge-qualificado); }
+.badge.contacto   { background: var(--badge-contacto); }
+.badge.novo       { background: var(--badge-novo); }
+
+/* ================================
+   SCROLLBAR CUSTOMIZADA
+================================ */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(196, 253, 210, 0.3);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(196, 253, 210, 0.5);
+}
+
+/* ================================
+   UTILITÁRIOS
+================================ */
+.text-muted { color: var(--text-muted); }
+.text-accent { color: var(--accent); }

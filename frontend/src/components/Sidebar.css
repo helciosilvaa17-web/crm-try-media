@@ -1,0 +1,98 @@
+.sidebar {
+  width: var(--sidebar-w);
+  height: 100vh;
+  background: var(--sidebar-bg);
+  backdrop-filter: blur(10px);
+  box-shadow: 3px 0 1px var(--sidebar-border);
+  padding: 40px 0;
+  position: fixed;
+  top: 0;
+  left: 0;
+  overflow: hidden;
+  transition: width var(--transition);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sidebar.expandido {
+  width: var(--sidebar-w-open);
+}
+
+/* Toggle */
+.sidebar-toggle {
+  display: flex;
+  align-items: center;
+  padding: 0 0 0 22px;
+  cursor: pointer;
+  margin-bottom: 20px;
+  white-space: nowrap;
+}
+
+.sidebar-toggle > i {
+  font-size: 35px;
+  color: var(--text);
+  flex-shrink: 0;
+}
+
+.sidebar-label {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--accent);
+  margin-left: 18px;
+  opacity: 0;
+  transition: opacity var(--transition);
+}
+
+.sidebar.expandido .sidebar-label {
+  opacity: 1;
+}
+
+/* Nav list */
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+}
+
+/* Nav item */
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  padding: 18px 0 18px 20px;
+  color: var(--text);
+  text-decoration: none;
+  transition: background var(--transition-fast);
+  white-space: nowrap;
+  border-radius: 0;
+}
+
+.sidebar-item:hover {
+  background: var(--active-bg);
+}
+
+.sidebar-item.ativo {
+  background: var(--active-bg);
+}
+
+.sidebar-icon {
+  font-size: 28px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  width: 40px;
+}
+
+.sidebar-text {
+  font-size: 18px;
+  font-weight: 500;
+  margin-left: 20px;
+  opacity: 0;
+  transition: opacity var(--transition);
+}
+
+.sidebar.expandido .sidebar-text {
+  opacity: 1;
+}

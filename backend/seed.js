@@ -4,7 +4,7 @@ const db = require('./db')
 
 async function seed() {
   try {
-    console.log('🌱 A iniciar o seed da base de dados...')
+    console.log('🌱 A iniciar o seed da base de dados....')
 
     // ─── UTILIZADORES ───
     const hashAdmin    = await bcrypt.hash('admin123',    12)

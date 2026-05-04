@@ -42,3 +42,5 @@ const ClienteModel = {
         await db.query('UPDATE clientes SET ultimo_contacto = CURDATE() WHERE id = ?', [clienteId])
     }
 }
+
+module.exports = ClienteModel

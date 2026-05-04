@@ -1,55 +1,25 @@
 require('dotenv').config()
-
 const express = require('express')
 const cors    = require('cors')
 
-const authRoutes    = require('./routes/auth')
-const clientesRoutes = require('./routes/clientes')
-const reunioesRoutes = require('./routes/reunioes')
-const apiRoutes     = require('./routes/api')
+const authRoutes      = require('./src/routes/auth.routes')
+const clientesRoutes  = require('./src/routes/clientes.routes')
+const reunioesRoutes  = require('./src/routes/reunioes.routes')
+const dashboardRoutes = require('./src/routes/dashboard.routes')
 
 const app  = express()
 const PORT = process.env.PORT || 3001
 
-// ─────────────────────────────────────────
-// Middlewares
-// ─────────────────────────────────────────
-app.use(cors({
-  origin: 'http://localhost:5173', // URL do Vite em dev
-  credentials: true
-}))
-
+app.use(cors({ origin: 'http://localhost:5173', credentials: true }))
 app.use(express.json())
 
-// ─────────────────────────────────────────
-// Rotas
-// ─────────────────────────────────────────
-app.use('/api/auth',     authRoutes)
-app.use('/api/clientes', clientesRoutes)
-app.use('/api/reunioes', reunioesRoutes)
-app.use('/api',          apiRoutes)
+app.use('/api/auth',      authRoutes)
+app.use('/api/clientes',  clientesRoutes)
+app.use('/api/reunioes',  reunioesRoutes)
+app.use('/api',           dashboardRoutes)
 
-// Rota de saúde — útil para testar se o servidor está vivo
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() })
-})
+app.get('/api/health', (req, res) => res.json({ status: 'ok' }))
+app.use((req, res) => res.status(404).json({ mensagem: 'Rota não encontrada.' }))
+app.use((err, req, res, next) => res.status(500).json({ mensagem: 'Erro interno do servidor.' }))
 
-// 404 para rotas não encontradas
-app.use((req, res) => {
-  res.status(404).json({ mensagem: 'Rota não encontrada.' })
-})
-
-// Erro global
-app.use((err, req, res, next) => {
-  console.error('Erro não tratado:', err)
-  res.status(500).json({ mensagem: 'Erro interno do servidor.' })
-})
-
-// ─────────────────────────────────────────
-// Arranque
-// ─────────────────────────────────────────
-app.listen(PORT, () => {
-  console.log(`🚀 Servidor a correr em http://localhost:${PORT}`)
-  console.log(`📊 Ambiente: ${process.env.NODE_ENV || 'development'}`)
-})
-
+app.listen(PORT, () => console.log(`🚀 Servidor a correr em http://localhost:${PORT}`))

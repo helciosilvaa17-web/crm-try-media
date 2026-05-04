@@ -71,7 +71,7 @@ async function seed() {
     console.log('')
     console.log('🎉 Seed concluído com sucesso!')
     console.log('─────────────────────────────────')
-    console.log('👤 Admin:    helocio@trymedia.ao  |  admin123')
+    console.log('👤 Admin:    helcio@trymedia.ao  |  admin123')
     console.log('👤 Vendedor: joao@trymedia.ao    |  vendedor123')
     console.log('─────────────────────────────────')
 

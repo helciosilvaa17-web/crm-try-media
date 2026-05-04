@@ -4,7 +4,6 @@ import './Configuracoes.css'
 
 const MOCK_USERS = [
   { id: 1, nome: 'Hélcio Silva',  email: 'helcio@trymedia.ao',  perfil: 'administrador' },
-  { id: 2, nome: 'Ana Ferreira',  email: 'ana@trymedia.ao',      perfil: 'vendedor'      },
   { id: 3, nome: 'João Manuel',   email: 'joao@trymedia.ao',     perfil: 'vendedor'      },
 ]
 

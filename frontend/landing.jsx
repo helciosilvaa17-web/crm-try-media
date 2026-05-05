@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 
 const C = {
-  bg: "#050C07",
+  bg: "#040b06",
   bgCard: "#0B1A0E",
   bgDeep: "#071009",
   bgItem: "#0F2012",

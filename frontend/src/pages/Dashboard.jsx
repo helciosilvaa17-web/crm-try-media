@@ -1,60 +1,111 @@
+// frontend/src/pages/Dashboard.jsx
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { api } from '../services/api'  // ← importamos o nosso utilitário
 import './Dashboard.css'
 
-// Dados mock para desenvolvimento — substituir por fetch à API
-const MOCK = {
-  kpis: {
-    totalLeads: 7,
-    fechados: 2,
-    emNegociacao: 3,
-    valorPipeline: 1150000
-  },
-  contactarHoje: [
-    { id: 1, empresa: 'Grupo Alpha', nicho: 'Marketing', telefone: '923000001' },
-    { id: 2, empresa: 'MediaX',      nicho: 'Audiovisual', telefone: '923000002' }
-  ],
-  funil: [
-    { fase: 'Novo',             qtd: 1, classe: 'novo'       },
-    { fase: 'Contacto Inicial', qtd: 3, classe: 'contacto'   },
-    { fase: 'Qualificado',      qtd: 2, classe: 'qualificado'},
-    { fase: 'Negociação',       qtd: 1, classe: 'negociacao' },
-    { fase: 'Em Progresso',     qtd: 1, classe: 'progresso'  },
-    { fase: 'Fechado',          qtd: 2, classe: 'fechado'    },
-  ],
-  meta: {
-    realizado: 230000,
-    total: 2325000
-  },
-  reunioes: [
-    { id: 1, titulo: 'Reunião Grupo Alpha', cliente: 'Grupo Alpha', data: '25 Mai · 12h00', tipo: 'Diagnóstico' },
-    { id: 2, titulo: 'Follow-up MediaX',    cliente: 'MediaX',      data: '28 Mai · 09h30', tipo: 'Follow-up'   }
-  ]
-}
-
 function formatKz(valor) {
-  return valor.toLocaleString('pt-AO') + ' Kz'
+  return Number(valor).toLocaleString('pt-AO') + ' Kz'
 }
 
 export default function Dashboard() {
   const { user } = useAuth()
   const navigate = useNavigate()
-  const [dados, setDados] = useState(MOCK)
+  
+  // Estado para os dados — começa vazio (null = ainda não carregou)
+  const [dados, setDados] = useState(null)
+  
+  // Estado para saber se está a carregar
+  // começa true porque mal o componente abre, já está a carregar
+  const [loading, setLoading] = useState(true)
+  
+  // Estado para guardar mensagem de erro, se houver
+  const [erro, setErro] = useState(null)
 
-  // Quando o backend estiver pronto, descomenta:
-  // useEffect(() => {
-  //   fetch('/api/dashboard', { headers: { Authorization: `Bearer ${localStorage.getItem('crm_token')}` }})
-  //     .then(r => r.json()).then(setDados)
-  // }, [])
+  // useEffect com array vazio = corre uma única vez quando o componente monta
+  useEffect(() => {
+    
+    // Definimos uma função async dentro do useEffect
+    // porque o callback do useEffect em si não pode ser async
+    async function carregarDashboard() {
+      try {
+        setLoading(true)
+        setErro(null)
+        
+        // api.get('/dashboard') chama GET http://localhost:3001/api/dashboard
+        // com o token JWT no header automaticamente
+        const dados = await api.get('/dashboard')
+        
+        setDados(dados)
+      } catch (err) {
+        // Se houve erro (rede, token expirado, servidor em baixo),
+        // guardamos a mensagem para mostrar ao utilizador
+        setErro(err.message)
+      } finally {
+        // finally corre SEMPRE — com sucesso ou com erro
+        // Garante que paramos o loading mesmo se houver erro
+        setLoading(false)
+      }
+    }
+    
+    carregarDashboard()
+  }, [])  // [] = sem dependências, corre só uma vez
 
-  const percentMeta = Math.min((dados.meta.realizado / dados.meta.total) * 100, 100).toFixed(1)
-  const maxFunil = Math.max(...dados.funil.map(f => f.qtd))
+  // Enquanto carrega, mostramos um indicador
+  if (loading) {
+    return (
+      <div className="dashboard">
+        <div style={{ textAlign: 'center', padding: '80px', color: 'var(--text-muted)' }}>
+          <i className="bi bi-arrow-repeat" style={{ fontSize: 32, display: 'block', marginBottom: 12 }}></i>
+          A carregar dashboard...
+        </div>
+      </div>
+    )
+  }
+
+  // Se houve erro, mostramos a mensagem
+  if (erro) {
+    return (
+      <div className="dashboard">
+        <div style={{ textAlign: 'center', padding: '80px', color: '#e74c3c' }}>
+          <i className="bi bi-exclamation-triangle" style={{ fontSize: 32, display: 'block', marginBottom: 12 }}></i>
+          Erro: {erro}
+        </div>
+      </div>
+    )
+  }
+
+  // Se dados ainda for null (improvável mas seguro), não renderizamos
+  if (!dados) return null
+
+  // A API devolve: { kpis, contactarHoje, funil, meta, reunioes }
+  // O backend usa campos como: totalLeads, fechados, emNegociacao, valorPipeline
+  // A meta tem: realizado e total (meta.meta_faturamento)
+  
+  const percentMeta = dados.meta.total > 0
+    ? Math.min((dados.meta.realizado / dados.meta.total) * 100, 100).toFixed(1)
+    : 0
+
+  // O funil da API devolve: [{ status: 'novo', qtd: 3 }, ...]
+  // Precisamos de mapear 'status' para 'fase' e adicionar a classe CSS
+  const labelsFunil = {
+    novo:        'Novo',
+    contacto:    'Contacto Inicial',
+    qualificado: 'Qualificado',
+    negociacao:  'Negociação',
+    progresso:   'Em Progresso',
+    fechado:     'Fechado',
+  }
+
+  // Calculamos o máximo para as barras proporcionais do funil
+  const maxFunil = dados.funil.length > 0
+    ? Math.max(...dados.funil.map(f => f.qtd))
+    : 1
 
   return (
     <div className="dashboard">
 
-      {/* Cabeçalho */}
       <div className="dash-header">
         <h1>Dashboard</h1>
         <p className="dash-sub">
@@ -62,7 +113,7 @@ export default function Dashboard() {
         </p>
       </div>
 
-      {/* KPI Cards */}
+      {/* KPI Cards — dados reais da API */}
       <div className="dash-kpis">
         <div className="kpi-card">
           <i className="bi bi-people-fill kpi-icon blue"></i>
@@ -94,7 +145,7 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Alerta contactar hoje */}
+      {/* Alerta de clientes para contactar */}
       {dados.contactarHoje.length > 0 && (
         <div className="dash-alerta">
           <i className="bi bi-exclamation-triangle-fill"></i>
@@ -116,7 +167,6 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* Linha 2 — Funil + Meta + Reuniões */}
       <div className="dash-row">
 
         {/* Funil de Vendas */}
@@ -126,14 +176,16 @@ export default function Dashboard() {
           </h2>
           <div className="funil-list">
             {dados.funil.map(f => (
-              <div key={f.fase} className="funil-item">
+              <div key={f.status} className="funil-item">
                 <div className="funil-info">
-                  <span className={`badge ${f.classe}`}>{f.fase}</span>
+                  <span className={`badge ${f.status}`}>
+                    {labelsFunil[f.status] || f.status}
+                  </span>
                   <span className="funil-qtd">{f.qtd}</span>
                 </div>
                 <div className="funil-barra-bg">
                   <div
-                    className={`funil-barra ${f.classe}`}
+                    className={`funil-barra ${f.status}`}
                     style={{ width: `${(f.qtd / maxFunil) * 100}%` }}
                   />
                 </div>
@@ -170,14 +222,25 @@ export default function Dashboard() {
             <i className="bi bi-calendar-event-fill"></i> Próximas Reuniões
           </h2>
           <div className="reunioes-list">
+            {dados.reunioes.length === 0 && (
+              <p style={{ color: 'var(--text-muted)', fontSize: 14 }}>
+                Sem reuniões agendadas.
+              </p>
+            )}
             {dados.reunioes.map(r => (
               <div key={r.id} className="reuniao-item">
                 <div className="reuniao-info">
                   <span className="reuniao-titulo">{r.titulo}</span>
-                  <span className="reuniao-cliente">{r.cliente}</span>
+                  <span className="reuniao-cliente">{r.cliente || '—'}</span>
                 </div>
                 <div className="reuniao-direita">
-                  <span className="reuniao-data">{r.data}</span>
+                  <span className="reuniao-data">
+                    {new Date(r.data_hora).toLocaleDateString('pt-AO', {
+                      day: '2-digit', month: 'short'
+                    })} · {new Date(r.data_hora).toLocaleTimeString('pt-AO', {
+                      hour: '2-digit', minute: '2-digit'
+                    })}
+                  </span>
                   <span className="reuniao-tipo">{r.tipo}</span>
                 </div>
               </div>

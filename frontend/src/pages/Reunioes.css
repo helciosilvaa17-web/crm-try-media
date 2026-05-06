@@ -386,3 +386,31 @@
 }
 
 .btn-guardar-modal:hover { opacity: 0.85; }
+
+
+/* Reunioes.css — adicionar no final */
+
+.cal-dia.selecionado {
+  background: var(--accent);
+  color: #fff;
+  border-radius: 8px;
+}
+
+.cal-dia.selecionado .cal-num {
+  color: #fff;
+}
+
+.cal-dia:hover:not(.vazio) {
+  background: var(--accent-hover, rgba(255,255,255,0.08));
+  border-radius: 8px;
+}
+
+.cal-reuniao-item {
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.cal-reuniao-item:hover {
+  background: rgba(255,255,255,0.05);
+  border-radius: 8px;
+}

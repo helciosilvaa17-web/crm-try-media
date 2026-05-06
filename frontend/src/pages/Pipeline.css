@@ -81,9 +81,10 @@
 
 .tabela td {
   padding: 16px 18px;
-  font-size: 14px;
+  font-size: 4px;
   border-top: 1px solid var(--table-border);
 }
+
 
 .tabela tbody tr:hover {
   background: var(--row-hover);
@@ -131,6 +132,7 @@
 .btn-acao.whatsapp { color: #4dd6a3; }
 .btn-acao.editar   { color: var(--text-muted); }
 .btn-acao.apagar   { color: #ff8a8a; }
+.btn-acao.email    {color: #bcfae3;}
 
 .btn-acao:hover { opacity: 0.7; transform: scale(1.1); }
 

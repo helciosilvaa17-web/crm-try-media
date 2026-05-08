@@ -8,7 +8,7 @@ const C = {
   greenDark: "#2E7D32",
   greenMid: "#4CAF50",
   greenLight: "#81C784",
-  text: "#DDE8DF",cd 
+  text: "#DDE8DF",
   textBright: "#EDF2EE",
   textMuted: "rgba(221,232,223,0.5)",
   textFaint: "rgba(221,232,223,0.28)",
@@ -187,8 +187,8 @@ function DashboardMockup() {
       <div style={{ padding: 16 }}>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8, marginBottom: 12 }}>
           {[
-            { label: "Clientes activos", val: "1.284", up: "+12% este mês" },
-            { label: "Receita (Kz)", val: "48M", up: "+8.3%" },
+            { label: "Clientes Registrados", val: "301", up: "+12% este mês" },
+            { label: "Receita (Kz)", val: "24M", up: "+8.3%" },
             { label: "Taxa de fecho", val: "67%", up: "+4pp" },
           ].map((m) => (
             <div key={m.label} style={{ background: C.bgItem, borderRadius: 8, padding: "10px 12px", border: "0.5px solid rgba(76,175,80,0.1)" }}>

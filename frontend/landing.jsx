@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 
 const C = {
-  bg: "#030604",
+  bg: "#050C07",
   bgCard: "#0B1A0E",
   bgDeep: "#071009",
   bgItem: "#0F2012",
@@ -80,6 +80,65 @@ const globalStyles = `
   input::placeholder { color: rgba(221,232,223,0.25) !important; }
   input:focus { outline: none; border-color: rgba(76,175,80,0.5) !important; }
 `;
+
+const IconChart = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="18" y1="20" x2="18" y2="10" />
+    <line x1="12" y1="20" x2="12" y2="4" />
+    <line x1="6" y1="20" x2="6" y2="14" />
+    <line x1="2" y1="20" x2="22" y2="20" />
+  </svg>
+);
+
+const IconUsers = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+    <circle cx="9" cy="7" r="4" />
+    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+  </svg>
+);
+
+const IconFunnel = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
+  </svg>
+);
+
+const IconMobile = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="5" y="2" width="14" height="20" rx="2" ry="2" />
+    <line x1="12" y1="18" x2="12.01" y2="18" strokeWidth="2.5" />
+  </svg>
+);
+
+const IconMail = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+    <polyline points="22,6 12,13 2,6" />
+  </svg>
+);
+
+const IconLink = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+  </svg>
+);
+
+const IconArrow = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: 7, flexShrink: 0 }}>
+    <line x1="5" y1="12" x2="19" y2="12" />
+    <polyline points="12 5 19 12 12 19" />
+  </svg>
+);
+
+const IconArrowUpRight = () => (
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: 6, flexShrink: 0 }}>
+    <line x1="7" y1="17" x2="17" y2="7" />
+    <polyline points="7 7 17 7 17 17" />
+  </svg>
+);
 
 function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -187,8 +246,8 @@ function DashboardMockup() {
       <div style={{ padding: 16 }}>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 8, marginBottom: 12 }}>
           {[
-            { label: "Clientes Registrados", val: "301", up: "+12% este mês" },
-            { label: "Receita (Kz)", val: "24M", up: "+8.3%" },
+            { label: "Clientes Registrados", val: "346", up: "+12% este mês" },
+            { label: "Receita (Kz)", val: "356000kz", up: "+8.3%" },
             { label: "Taxa de fecho", val: "67%", up: "+4pp" },
           ].map((m) => (
             <div key={m.label} style={{ background: C.bgItem, borderRadius: 8, padding: "10px 12px", border: "0.5px solid rgba(76,175,80,0.1)" }}>
@@ -300,9 +359,10 @@ function Hero() {
               padding: "13px 28px", borderRadius: 8, fontSize: 14, fontWeight: 500,
               cursor: "pointer", letterSpacing: 0.3, transition: "opacity 0.2s, transform 0.15s",
               fontFamily: "'DM Sans', sans-serif",
+              display: "flex", alignItems: "center",
             }}
           >
-            Experimentar gratuitamente →
+            Experimentar gratuitamente <IconArrowUpRight />
           </button>
           <button
             className="tm-btn-secondary"
@@ -312,9 +372,10 @@ function Hero() {
               padding: "13px 28px", borderRadius: 8, fontSize: 14,
               cursor: "pointer", transition: "border-color 0.2s, color 0.2s",
               fontFamily: "'DM Sans', sans-serif",
+              display: "flex", alignItems: "center",
             }}
           >
-            Ver demonstração
+            Ver demonstração <IconArrow />
           </button>
         </div>
       </div>
@@ -361,12 +422,12 @@ function StatsBar() {
 
 function Features() {
   const features = [
-    { icon: "📊", title: "Dashboard analítico", desc: "Visão 360° do seu negócio com métricas em tempo real, gráficos interactivos e relatórios automáticos." },
-    { icon: "🤝", title: "Gestão de clientes", desc: "Histórico completo de cada cliente desde o primeiro contacto, com notas, documentos e interacções." },
-    { icon: "🎯", title: "Pipeline de vendas", desc: "Visualize e gira oportunidades em cada etapa do funil, com previsão automática de receita." },
-    { icon: "📱", title: "Acesso móvel", desc: "A sua equipa comercial conectada em qualquer lugar. Disponível para iOS e Android, mesmo offline." },
-    { icon: "✉️", title: "Marketing integrado", desc: "Campanhas de e-mail e SMS directamente integradas, com segmentação avançada e análise de resultados." },
-    { icon: "🔗", title: "Integrações locais", desc: "Compatível com sistemas de facturação angolanos, Multicaixa Express e principais plataformas bancárias." },
+    { icon: <IconChart />, title: "Dashboard analítico", desc: "Visão 360° do seu negócio com métricas em tempo real, gráficos interactivos e relatórios automáticos." },
+    { icon: <IconUsers />, title: "Gestão de clientes", desc: "Histórico completo de cada cliente desde o primeiro contacto, com notas, documentos e interacções." },
+    { icon: <IconFunnel />, title: "Pipeline de vendas", desc: "Visualize e gira oportunidades em cada etapa do funil, com previsão automática de receita." },
+    { icon: <IconMobile />, title: "Acesso móvel", desc: "A sua equipa comercial conectada em qualquer lugar. Disponível para iOS e Android, mesmo offline." },
+    { icon: <IconMail />, title: "Marketing integrado", desc: "Campanhas de e-mail e SMS directamente integradas, com segmentação avançada e análise de resultados." },
+    { icon: <IconLink />, title: "Integrações locais", desc: "Compatível com sistemas de facturação angolanos, Multicaixa Express e principais plataformas bancárias." },
   ];
 
   return (
@@ -392,7 +453,7 @@ function Features() {
               transition: "border-color 0.25s, transform 0.2s", cursor: "default",
             }}
           >
-            <div style={{ width: 40, height: 40, background: "rgba(46,125,50,0.15)", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "1rem", fontSize: 18 }}>
+            <div style={{ width: 40, height: 40, background: "rgba(46,125,50,0.15)", borderRadius: 10, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: "1rem" }}>
               {f.icon}
             </div>
             <div style={{ fontSize: 14, fontWeight: 500, color: C.textBright, marginBottom: "0.5rem" }}>{f.title}</div>
@@ -512,9 +573,10 @@ function Testimonials() {
             padding: "13px 28px", borderRadius: 8, fontSize: 14, fontWeight: 500,
             cursor: "pointer", transition: "opacity 0.2s, transform 0.15s",
             fontFamily: "'DM Sans', sans-serif",
+            display: "flex", alignItems: "center",
           }}
         >
-          Ver mais casos de sucesso →
+          Ver mais casos de sucesso <IconArrow />
         </button>
       </div>
 
@@ -598,9 +660,10 @@ function CTASection() {
             padding: "12px 24px", borderRadius: 8, fontSize: 14, fontWeight: 500,
             cursor: "pointer", whiteSpace: "nowrap", transition: "opacity 0.2s, transform 0.15s",
             fontFamily: "'DM Sans', sans-serif",
+            display: "flex", alignItems: "center",
           }}
         >
-          Agendar demo
+          Agendar demo <IconArrow />
         </button>
       </div>
 

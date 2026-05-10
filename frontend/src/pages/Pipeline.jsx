@@ -94,7 +94,7 @@ export default function Pipeline() {
         telefone:        cliente.telefone || '',
         email:           cliente.email || '',
         whatsapp:        cliente.whatsapp || '',
-        ultimo_contacto: cliente.ultimo_contacto?.split('T')[0] || '',
+        ultimo_contacto: cliente.ultimo_contacto.split('T')[0] || '',
         fecho_previsto:  cliente.fecho_previsto?.split('T')[0] || '',
         observacoes:     cliente.observacoes || '',
         link_info:       cliente.link_info || '',
@@ -188,7 +188,7 @@ export default function Pipeline() {
       <div className="pipeline-header">
         <h1>Pipeline de Clientes</h1>
         <div className="pipeline-header-actions">
-          <select
+          <select 
             className="filtro-status"
             value={filtroStatus}
             onChange={e => setFiltroStatus(e.target.value)}
@@ -248,6 +248,7 @@ export default function Pipeline() {
                 <th>Valor</th>
                 <th>Vendedor</th>
                 <th>Último Contacto</th>
+                <th>Fecho Previsto</th>
                 <th>Acções</th>
               </tr>
             </thead>
@@ -278,7 +279,12 @@ export default function Pipeline() {
                   <td>{c.vendedor_nome || '—'}</td>
                   <td>
                     {c.ultimo_contacto
-                      ? new Date(c.ultimo_contacto).toLocaleDateString('pt-AO')
+                      ? c.ultimo_contacto.split('T')[0].split('-').reverse().join('-')
+                      : '—'}
+                  </td>
+                  <td>
+                    {c.fecho_previsto
+                      ? c.fecho_previsto.split('T')[0].split('-').reverse().join('-')
                       : '—'}
                   </td>
                   <td className="td-acoes">

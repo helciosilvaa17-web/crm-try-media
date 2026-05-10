@@ -8,7 +8,7 @@ const reunioesRoutes  = require('./src/routes/reunioes.routes')
 const dashboardRoutes = require('./src/routes/dashboard.routes')
 
 const app  = express()
-const PORT = process.env.PORT || 3306
+const PORT = process.env.PORT || 3001
 
 app.use(cors({ origin: 'http://localhost:5173', credentials: true }))
 app.use(express.json())

@@ -1,278 +1,351 @@
-// frontend/src/pages/Relatorios.jsx
 import { useState, useEffect } from 'react'
 import { api } from '../services/api'
 import './Relatorios.css'
 
-// Meses disponíveis para filtrar — mostramos os últimos 6 meses
-// e os próximos 2 para planeamento
 function gerarOpcoesMeses() {
   const opcoes = []
   const hoje = new Date()
-  
-  // Vamos 5 meses para trás e 2 para a frente
   for (let i = -5; i <= 2; i++) {
     const data = new Date(hoje.getFullYear(), hoje.getMonth() + i, 1)
     opcoes.push({
       label: data.toLocaleDateString('pt-AO', { month: 'long', year: 'numeric' }),
-      mes: data.getMonth() + 1,   // getMonth() começa em 0, a API quer 1-12
+      mes: data.getMonth() + 1,
       ano: data.getFullYear()
     })
   }
-  
   return opcoes
 }
 
 const OPCOES_MESES = gerarOpcoesMeses()
+const OPCAO_TODOS  = { label: 'Todos os dados', mes: null, ano: null }
 
-// Labels legíveis para os status da BD
 const LABELS_FASE = {
-  novo:        'Novo',
-  contacto:    'Contacto Inicial',
-  qualificado: 'Qualificado',
-  negociacao:  'Negociação',
-  progresso:   'Em Progresso',
-  fechado:     'Fechado',
+  novo: 'Novo', contacto: 'Contacto Inicial', qualificado: 'Qualificado',
+  negociacao: 'Negociação', progresso: 'Em Progresso', fechado: 'Fechado',
 }
 
-function fmt(v) {
-  return Number(v || 0).toLocaleString('pt-AO') + ' Kz'
+function fmt(v) { return Number(v || 0).toLocaleString('pt-AO') + ' Kz' }
+
+function BarraProgresso({ valor, total, cor = 'var(--accent)' }) {
+  const pct = total > 0 ? Math.min((valor / total) * 100, 100) : 0
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+      <div style={{ flex: 1, height: 8, borderRadius: 4, background: 'var(--border)', overflow: 'hidden' }}>
+        <div style={{ width: `${pct}%`, height: '100%', background: cor, borderRadius: 4, transition: 'width 0.5s ease' }} />
+      </div>
+      <span style={{ fontSize: 13, color: 'var(--text-muted)', minWidth: 40 }}>{pct.toFixed(0)}%</span>
+    </div>
+  )
 }
 
 export default function Relatorios() {
-  const hoje = new Date()
-  
-  // Estado do filtro — começa no mês actual
-  const [mesSelecionado, setMesSelecionado] = useState({
-    mes: hoje.getMonth() + 1,
-    ano: hoje.getFullYear()
-  })
-  
-  // Dados vindos da API
-  const [dados, setDados] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [erro, setErro] = useState(null)
+  const [mesSelecionado, setMesSelecionado]     = useState(OPCAO_TODOS)
+  const [vendedorSelecionado, setVendedorSelecionado] = useState(null)
+  const [dadosGlobais, setDadosGlobais]         = useState(null)
+  const [dadosVendedor, setDadosVendedor]       = useState(null)
+  const [loading, setLoading]                   = useState(true)
+  const [erro, setErro]                         = useState(null)
 
-  // Este useEffect corre sempre que o mês seleccionado muda
-  // É por isso que mesSelecionado está nas dependências
   useEffect(() => {
-    async function carregarRelatorio() {
+    async function carregar() {
       try {
         setLoading(true)
         setErro(null)
-        
-        // Enviamos mes e ano como query params
-        // Ex: GET /api/relatorios?mes=5&ano=2026
-        const dados = await api.get(
-          `/relatorios?mes=${mesSelecionado.mes}&ano=${mesSelecionado.ano}`
-        )
-        
-        setDados(dados)
+        const params = mesSelecionado.mes
+          ? `?mes=${mesSelecionado.mes}&ano=${mesSelecionado.ano}`
+          : ''
+        const dados = await api.get(`/relatorios${params}`)
+        setDadosGlobais(dados)
+        setVendedorSelecionado(null)
+        setDadosVendedor(null)
       } catch (err) {
         setErro(err.message)
       } finally {
         setLoading(false)
       }
     }
-    
-    carregarRelatorio()
+    carregar()
   }, [mesSelecionado.mes, mesSelecionado.ano])
-  // Nota: colocamos .mes e .ano em vez do objecto inteiro
-  // porque se colocássemos o objecto, o React compararia a referência
-  // (que é sempre diferente) e entraria em loop infinito
 
-  // Handler do selector de mês
-  // Recebe o índice do array OPCOES_MESES
+  useEffect(() => {
+    if (!vendedorSelecionado) return
+    async function carregarVendedor() {
+      try {
+        setLoading(true)
+        const params = mesSelecionado.mes
+          ? `?mes=${mesSelecionado.mes}&ano=${mesSelecionado.ano}`
+          : ''
+        const dados = await api.get(`/relatorios/vendedor/${vendedorSelecionado}${params}`)
+        setDadosVendedor(dados)
+      } catch (err) {
+        setErro(err.message)
+      } finally {
+        setLoading(false)
+      }
+    }
+    carregarVendedor()
+  }, [vendedorSelecionado, mesSelecionado.mes, mesSelecionado.ano])
+
   const handleMudarMes = (e) => {
-    const opcao = OPCOES_MESES[e.target.value]
-    setMesSelecionado({ mes: opcao.mes, ano: opcao.ano })
+    const val = e.target.value
+    setMesSelecionado(val === 'todos' ? OPCAO_TODOS : OPCOES_MESES[Number(val)])
   }
 
-  // Encontramos o índice da opção actual para o valor do select
-  const indiceActual = OPCOES_MESES.findIndex(
-    o => o.mes === mesSelecionado.mes && o.ano === mesSelecionado.ano
-  )
-
-  if (loading) {
-    return (
-      <div className="relatorios-page">
-        <div style={{ textAlign: 'center', padding: 80, color: 'var(--text-muted)' }}>
-          <i className="bi bi-arrow-repeat" style={{ fontSize: 32, display: 'block', marginBottom: 12 }}></i>
-          A carregar relatório...
-        </div>
-      </div>
-    )
-  }
-
-  if (erro) {
-    return (
-      <div className="relatorios-page">
-        <div style={{ textAlign: 'center', padding: 80, color: '#e74c3c' }}>
-          <i className="bi bi-exclamation-triangle" style={{ fontSize: 32, display: 'block', marginBottom: 12 }}></i>
-          Erro: {erro}
-        </div>
-      </div>
-    )
-  }
-
-  if (!dados) return null
-
-  const pct = dados.meta > 0
-    ? Math.min((dados.faturamento / dados.meta) * 100, 100).toFixed(2)
-    : 0
-
-  const maxVal = dados.pipeline.length > 0
-    ? Math.max(...dados.pipeline.map(p => Number(p.valor)))
-    : 1
+  const valorSelect = mesSelecionado.mes === null
+    ? 'todos'
+    : OPCOES_MESES.findIndex(o => o.mes === mesSelecionado.mes && o.ano === mesSelecionado.ano)
 
   return (
     <div className="relatorios-page">
 
       <div className="rel-header">
-        <h1>Relatórios</h1>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          {vendedorSelecionado && (
+            <button
+              onClick={() => { setVendedorSelecionado(null); setDadosVendedor(null) }}
+              style={{
+                background: 'none', border: '1px solid var(--border)',
+                borderRadius: 8, padding: '6px 12px', cursor: 'pointer',
+                color: 'var(--text)', display: 'flex', alignItems: 'center', gap: 6
+              }}
+            >
+              <i className="bi bi-arrow-left"></i> Equipa
+            </button>
+          )}
+          <h1>
+            {vendedorSelecionado && dadosVendedor
+              ? dadosVendedor.vendedor.nome
+              : 'Relatórios'}
+          </h1>
+        </div>
 
-        {/* Selector de mês — agora funcional */}
-        <select
-          className="sel-mes"
-          value={indiceActual}
-          onChange={handleMudarMes}
-        >
+        <select className="sel-mes" value={valorSelect} onChange={handleMudarMes}>
+          <option value="todos">Todos os dados</option>
           {OPCOES_MESES.map((opcao, i) => (
-            <option key={i} value={i}>
-              {opcao.label}
-            </option>
+            <option key={i} value={i}>{opcao.label}</option>
           ))}
         </select>
       </div>
 
-      {/* KPIs principais */}
-      <div className="rel-kpis">
-        <div className="rel-kpi">
-          <span className="rel-kpi-label">Faturamento Total</span>
-          <span className="rel-kpi-valor">{fmt(dados.faturamento)}</span>
+      {loading && (
+        <div style={{ textAlign: 'center', padding: 80, color: 'var(--text-muted)' }}>
+          A carregar...
         </div>
-        <div className="rel-kpi">
-          <span className="rel-kpi-label">Meta Mensal</span>
-          <span className="rel-kpi-valor muted">{fmt(dados.meta)}</span>
-        </div>
-        <div className="rel-kpi">
-          <span className="rel-kpi-label">% da Meta Atingida</span>
-          <span className="rel-kpi-valor accent">{pct}%</span>
-        </div>
-        <div className="rel-kpi">
-          <span className="rel-kpi-label">Total de Leads</span>
-          <span className="rel-kpi-valor">{dados.metricas.totalLeads}</span>
-        </div>
-        <div className="rel-kpi">
-          <span className="rel-kpi-label">Reuniões Agendadas</span>
-          <span className="rel-kpi-valor">{dados.metricas.reunioesAgendadas}</span>
-        </div>
-      </div>
+      )}
 
-      <div className="rel-row">
+      {erro && (
+        <div style={{ textAlign: 'center', padding: 80, color: '#e74c3c' }}>
+          Erro: {erro}
+        </div>
+      )}
 
-        {/* Pipeline por fase */}
-        <div className="rel-card">
-          <h2 className="rel-card-titulo">
-            <i className="bi bi-funnel-fill"></i> Pipeline por Fase
-          </h2>
+      {/* ── Vista Global ─────────────────────────────────────── */}
+      {!loading && !erro && !vendedorSelecionado && dadosGlobais && (
+        <>
+          <div className="rel-kpis">
+            <div className="rel-kpi">
+              <span className="rel-kpi-label">Faturamento Total</span>
+              <span className="rel-kpi-valor">{fmt(dadosGlobais.faturamento)}</span>
+            </div>
+            <div className="rel-kpi">
+              <span className="rel-kpi-label">Meta Mensal</span>
+              <span className="rel-kpi-valor muted">{fmt(dadosGlobais.meta)}</span>
+            </div>
+            <div className="rel-kpi">
+              <span className="rel-kpi-label">% da Meta</span>
+              <span className="rel-kpi-valor accent">
+                {dadosGlobais.meta > 0
+                  ? Math.min((dadosGlobais.faturamento / dadosGlobais.meta) * 100, 100).toFixed(1)
+                  : 0}%
+              </span>
+            </div>
+            <div className="rel-kpi">
+              <span className="rel-kpi-label">Leads criados</span>
+              <span className="rel-kpi-valor">{dadosGlobais.metricas.totalLeads}</span>
+            </div>
+            <div className="rel-kpi">
+              <span className="rel-kpi-label">Reuniões agendadas</span>
+              <span className="rel-kpi-valor">{dadosGlobais.metricas.reunioesAgendadas}</span>
+            </div>
+            <div className="rel-kpi">
+              <span className="rel-kpi-label">Reuniões realizadas</span>
+              <span className="rel-kpi-valor">{dadosGlobais.metricas.reunioesRealizadas}</span>
+            </div>
+          </div>
 
-          {dados.pipeline.length === 0 ? (
-            <p style={{ color: 'var(--text-muted)', padding: 20, textAlign: 'center' }}>
-              Sem dados para este período.
-            </p>
-          ) : (
-            <table className="rel-tabela">
-              <thead>
-                <tr>
-                  <th>Fase</th>
-                  <th>Qtd</th>
-                  <th>Valor Total</th>
-                  <th>Barra</th>
-                </tr>
-              </thead>
-              <tbody>
-                {dados.pipeline.map(p => (
-                  <tr key={p.fase}>
-                    <td>
-                      {/* Usamos a label legível se existir, senão o valor da BD */}
-                      <span className={`badge ${p.fase}`}>
+          <div className="rel-row">
+            <div className="rel-card" style={{ flex: 2 }}>
+              <h2 className="rel-card-titulo">
+                <i className="bi bi-people-fill"></i> Desempenho da Equipa
+              </h2>
+              <p style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 16 }}>
+                Clica num vendedor para ver os detalhes individuais.
+              </p>
+              {dadosGlobais.vendedores.length === 0 ? (
+                <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: 20 }}>
+                  Sem vendedores registados.
+                </p>
+              ) : (
+                <table className="rel-tabela">
+                  <thead>
+                    <tr>
+                      <th>Vendedor</th><th>Clientes</th><th>Reuniões</th>
+                      <th>Fechados</th><th>Faturamento</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {dadosGlobais.vendedores.map(v => (
+                      <tr key={v.id} onClick={() => setVendedorSelecionado(v.id)}
+                        style={{ cursor: 'pointer' }} className="linha-clicavel">
+                        <td style={{ fontWeight: 600 }}>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <i className="bi bi-person-circle" style={{ fontSize: 18, opacity: 0.6 }}></i>
+                            {v.nome}
+                          </span>
+                        </td>
+                        <td>{v.total_clientes}</td>
+                        <td>{v.reunioes_mes}</td>
+                        <td>{v.fechados_mes}</td>
+                        <td style={{ color: 'var(--accent)', fontWeight: 600 }}>
+                          {fmt(v.faturamento_mes)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div className="rel-card">
+                <h2 className="rel-card-titulo">
+                  <i className="bi bi-funnel-fill"></i> Pipeline
+                </h2>
+                {dadosGlobais.pipeline.map(p => (
+                  <div key={p.fase} style={{ marginBottom: 12 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                      <span className={`badge ${p.fase}`} style={{ fontSize: 12 }}>
                         {LABELS_FASE[p.fase] || p.fase}
                       </span>
-                    </td>
-                    <td style={{ fontWeight: 700 }}>{p.qtd}</td>
-                    <td style={{ color: 'var(--accent)' }}>{fmt(p.valor)}</td>
-                    <td style={{ width: '30%' }}>
-                      <div className="mini-barra-bg">
-                        <div
-                          className="mini-barra"
-                          style={{ width: `${(Number(p.valor) / maxVal) * 100}%` }}
-                        />
-                      </div>
-                    </td>
-                  </tr>
+                      <span style={{ fontSize: 13, fontWeight: 700 }}>{p.qtd}</span>
+                    </div>
+                    <BarraProgresso
+                      valor={Number(p.valor)}
+                      total={Math.max(...dadosGlobais.pipeline.map(x => Number(x.valor)))}
+                    />
+                  </div>
                 ))}
-              </tbody>
-            </table>
-          )}
-        </div>
+              </div>
 
-        {/* Barra de progresso da meta */}
-        <div className="rel-card">
-          <h2 className="rel-card-titulo">
-            <i className="bi bi-bullseye"></i> Progresso da Meta
-          </h2>
-          <div style={{ padding: '20px 0' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-              <span style={{ color: 'var(--text-muted)', fontSize: 14 }}>Realizado</span>
-              <span style={{ fontWeight: 700 }}>{fmt(dados.faturamento)}</span>
+              {dadosGlobais.taxasEsperadas && (
+                <div className="rel-card">
+                  <h2 className="rel-card-titulo">
+                    <i className="bi bi-graph-up-arrow"></i> Taxas Esperadas
+                  </h2>
+                  {[
+                    { label: 'Conexão',     val: dadosGlobais.taxasEsperadas.taxa_conexao },
+                    { label: 'Agendamento', val: dadosGlobais.taxasEsperadas.taxa_agendamento },
+                    { label: 'Realização',  val: dadosGlobais.taxasEsperadas.taxa_realizacao },
+                    { label: 'Fechamento',  val: dadosGlobais.taxasEsperadas.taxa_fechamento },
+                  ].map(t => (
+                    <div key={t.label} style={{ marginBottom: 12 }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                        <span style={{ fontSize: 13 }}>{t.label}</span>
+                        <span style={{ fontSize: 13, fontWeight: 700 }}>{t.val}%</span>
+                      </div>
+                      <BarraProgresso valor={t.val} total={100} cor="#9b59b6" />
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-            <div className="meta-barra-bg" style={{ height: 12, borderRadius: 6, background: 'var(--border)', overflow: 'hidden' }}>
-              <div
-                className="meta-barra"
-                style={{
-                  width: `${pct}%`,
-                  height: '100%',
-                  background: Number(pct) >= 100 ? '#27ae60' : 'var(--accent)',
-                  borderRadius: 6,
-                  transition: 'width 0.6s ease'
-                }}
-              />
+          </div>
+        </>
+      )}
+
+      {/* ── Vista Vendedor ───────────────────────────────────── */}
+      {!loading && !erro && vendedorSelecionado && dadosVendedor && (
+        <>
+          <div className="rel-kpis">
+            <div className="rel-kpi">
+              <span className="rel-kpi-label">Faturamento</span>
+              <span className="rel-kpi-valor">{fmt(dadosVendedor.metricas.faturamentoMes)}</span>
             </div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
-              <span style={{ color: 'var(--accent)', fontWeight: 700, fontSize: 18 }}>
-                {pct}%
-              </span>
-              <span style={{ color: 'var(--text-muted)', fontSize: 14 }}>
-                Meta: {fmt(dados.meta)}
+            <div className="rel-kpi">
+              <span className="rel-kpi-label">Clientes Totais</span>
+              <span className="rel-kpi-valor">{dadosVendedor.metricas.totalClientes}</span>
+            </div>
+            <div className="rel-kpi">
+              <span className="rel-kpi-label">Fechados este mês</span>
+              <span className="rel-kpi-valor">{dadosVendedor.metricas.fechadosMes}</span>
+            </div>
+            <div className="rel-kpi">
+              <span className="rel-kpi-label">Reuniões agendadas</span>
+              <span className="rel-kpi-valor">{dadosVendedor.metricas.reunioesAgendadas}</span>
+            </div>
+            <div className="rel-kpi">
+              <span className="rel-kpi-label">Reuniões realizadas</span>
+              <span className="rel-kpi-valor">{dadosVendedor.metricas.reunioesRealizadas}</span>
+            </div>
+            <div className="rel-kpi">
+              <span className="rel-kpi-label">Meta de Reuniões</span>
+              <span className="rel-kpi-valor muted">
+                {dadosVendedor.metricas.reunioesAgendadas} / {dadosVendedor.metricas.metaReunioes || '—'}
               </span>
             </div>
           </div>
 
-          {/* Resumo de métricas */}
-          <div style={{ borderTop: '1px solid var(--border)', marginTop: 16, paddingTop: 16 }}>
-            <h3 style={{ fontSize: 14, color: 'var(--text-muted)', marginBottom: 12 }}>
-              Resumo do Período
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: 14 }}>Leads criados</span>
-                <strong>{dados.metricas.totalLeads}</strong>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: 14 }}>Reuniões agendadas</span>
-                <strong>{dados.metricas.reunioesAgendadas}</strong>
-              </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: 14 }}>Clientes fechados</span>
-                <strong>
-                  {dados.pipeline.find(p => p.fase === 'fechado')?.qtd || 0}
-                </strong>
-              </div>
+          <div className="rel-row">
+            <div className="rel-card">
+              <h2 className="rel-card-titulo">
+                <i className="bi bi-funnel-fill"></i> Pipeline de {dadosVendedor.vendedor.nome}
+              </h2>
+              <table className="rel-tabela">
+                <thead>
+                  <tr><th>Fase</th><th>Qtd</th><th>Valor</th></tr>
+                </thead>
+                <tbody>
+                  {dadosVendedor.pipeline.map(p => (
+                    <tr key={p.fase}>
+                      <td><span className={`badge ${p.fase}`}>{LABELS_FASE[p.fase] || p.fase}</span></td>
+                      <td style={{ fontWeight: 700 }}>{p.qtd}</td>
+                      <td style={{ color: 'var(--accent)' }}>{fmt(p.valor)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="rel-card">
+              <h2 className="rel-card-titulo">
+                <i className="bi bi-clock-history"></i> Últimas Interacções
+              </h2>
+              {dadosVendedor.ultimasInteracoes.length === 0 ? (
+                <p style={{ color: 'var(--text-muted)', fontSize: 14 }}>Sem interacções registadas.</p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {dadosVendedor.ultimasInteracoes.map((inter, i) => (
+                    <div key={i} style={{
+                      padding: '10px 12px', background: 'var(--border)',
+                      borderRadius: 8, fontSize: 13
+                    }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                        <strong>{inter.cliente}</strong>
+                        <span style={{ color: 'var(--text-muted)' }}>
+                          {new Date(inter.data).toLocaleDateString('pt-AO')}
+                        </span>
+                      </div>
+                      <div style={{ color: 'var(--accent)', fontSize: 12, marginBottom: 4 }}>{inter.tipo}</div>
+                      <p style={{ color: 'var(--text-muted)', margin: 0, lineHeight: 1.4 }}>{inter.nota}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
-        </div>
+        </>
+      )}
 
-      </div>
     </div>
   )
 }

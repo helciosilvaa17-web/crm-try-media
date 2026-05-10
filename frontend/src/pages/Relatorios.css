@@ -161,3 +161,19 @@
   .rel-kpis { grid-template-columns: repeat(3, 1fr); }
   .rel-row  { grid-template-columns: 1fr; }
 }
+
+
+/* Adiciona no final do Relatorios.css */
+
+.linha-clicavel:hover td {
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.linha-clicavel td:first-child {
+  border-left: 3px solid transparent;
+  transition: border-color 0.15s;
+}
+
+.linha-clicavel:hover td:first-child {
+  border-left-color: var(--accent);
+}

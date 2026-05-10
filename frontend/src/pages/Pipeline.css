@@ -37,6 +37,11 @@
   cursor: pointer;
 }
 
+.filtro-status option{
+  background: #08160e;
+  color: white;
+}
+
 .btn-novo {
   background: var(--accent);
   color: #000;
@@ -81,7 +86,7 @@
 
 .tabela td {
   padding: 16px 18px;
-  font-size: 4px;
+  font-size: 14px;
   border-top: 1px solid var(--table-border);
 }
 
@@ -209,8 +214,16 @@
 .form-group label {
   font-size: 13px;
   font-weight: 500;
-  color: var(--text-muted);
+  color:#000
 }
+
+
+
+.form-group select option {
+  background: #08160e;
+  color: white;
+}
+
 
 .form-group input,
 .form-group select,

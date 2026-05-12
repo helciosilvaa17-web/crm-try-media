@@ -188,7 +188,7 @@ export default function Configuracoes() {
                     <td style={{ color: 'var(--text-muted)' }}>{u.email}</td>
                     <td>
                       <span className={`perfil-badge ${u.perfil}`}>
-                        {u.perfil === 'administrador' ? '👑 Admin' : '💼 Vendedor'}
+                        {u.perfil === 'administrador' ? 'Administrador' : 'Vendedor'}
                       </span>
                     </td>
                     <td style={{ color: 'var(--text-muted)', fontSize: 13 }}>

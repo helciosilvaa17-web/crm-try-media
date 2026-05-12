@@ -72,7 +72,7 @@ export default function Perfil() {
         <div>
           <h1>{user?.nome}</h1>
           <span className={`perfil-badge ${user?.perfil}`}>
-            {user?.perfil === 'administrador' ? '👑 Administrador' : '💼 Vendedor'}
+            {user?.perfil === 'administrador' ? 'Administrador' : 'Vendedor'}
           </span>
         </div>
       </div>

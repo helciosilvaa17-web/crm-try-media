@@ -1,22 +1,17 @@
-// frontend/src/pages/Reunioes.jsx
 import { useState, useEffect } from 'react'
 import { api } from '../services/api'
 import './Reunioes.css'
 
-// ─── Constantes ───────────────────────────────────────────────
-
 const TIPOS = ['diagnóstico', 'follow-up', 'proposta', 'reunião interna', 'outro']
-
 const FORMATOS = ['online', 'presencial']
 
-// Estados com as cores que pediste
 const ESTADOS = [
-  { valor: 'agendado',           label: 'Agendado',            cor: '#3498db' },
-  { valor: 'por confirmacao',    label: 'Por Confirmação',     cor: '#f39c12' },
-  { valor: 'sem comparecimento', label: 'Sem Comparecimento',  cor: '#e67e22' },
-  { valor: 'remarcado',          label: 'Remarcado',           cor: '#9b59b6' },
-  { valor: 'cancelado',          label: 'Cancelado',           cor: '#e74c3c' },
-  { valor: 'realizada',          label: 'Realizada',           cor: '#27ae60' },
+  { valor: 'agendado',           label: 'Agendado',           cor: '#3498db' },
+  { valor: 'por confirmacao',    label: 'Por Confirmação',    cor: '#f39c12' },
+  { valor: 'sem comparecimento', label: 'Sem Comparecimento', cor: '#e67e22' },
+  { valor: 'remarcado',          label: 'Remarcado',          cor: '#9b59b6' },
+  { valor: 'cancelado',          label: 'Cancelado',          cor: '#e74c3c' },
+  { valor: 'realizada',          label: 'Realizada',          cor: '#27ae60' },
 ]
 
 const MESES = [
@@ -31,8 +26,6 @@ const FORM_VAZIO = {
   estado: 'agendado', formato: 'online', responsavel_trymedia: ''
 }
 
-// ─── Funções auxiliares ───────────────────────────────────────
-
 function formatDataHora(str) {
   const d = new Date(str)
   return d.toLocaleDateString('pt-AO', { day: '2-digit', month: 'short' }) +
@@ -42,7 +35,7 @@ function formatDataHora(str) {
 function diasDoMes(ano, mes) {
   const primeiro = new Date(ano, mes, 1)
   const ultimo   = new Date(ano, mes + 1, 0)
-  let inicioSemana = (primeiro.getDay() + 6) % 7
+  const inicioSemana = (primeiro.getDay() + 6) % 7
   const dias = []
   for (let i = 0; i < inicioSemana; i++) dias.push(null)
   for (let d = 1; d <= ultimo.getDate(); d++) dias.push(d)
@@ -57,42 +50,31 @@ function getLabelEstado(valor) {
   return ESTADOS.find(e => e.valor === valor)?.label || valor
 }
 
-// ─── Componente ───────────────────────────────────────────────
-
 export default function Reunioes() {
-  const [vista, setVista] = useState('lista')
-  const [reunioes, setReunioes] = useState([])
+  const [vista, setVista]           = useState('lista')
+  const [reunioes, setReunioes]     = useState([])
   const [utilizadores, setUtilizadores] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [erro, setErro] = useState(null)
-
+  const [loading, setLoading]       = useState(true)
+  const [erro, setErro]             = useState(null)
   const [modalAberto, setModalAberto] = useState(false)
-  const [form, setForm] = useState(FORM_VAZIO)
+  const [form, setForm]             = useState(FORM_VAZIO)
   const [editandoId, setEditandoId] = useState(null)
-  const [guardando, setGuardando] = useState(false)
+  const [guardando, setGuardando]   = useState(false)
+  const [confirmarId, setConfirmarId] = useState(null)  // ← dentro do componente
 
   const hoje = new Date()
-  const [calMes, setCalMes] = useState(hoje.getMonth())
-  const [calAno, setCalAno] = useState(hoje.getFullYear())
-
-  // Dia seleccionado no calendário — começa no dia de hoje
+  const [calMes, setCalMes]               = useState(hoje.getMonth())
+  const [calAno, setCalAno]               = useState(hoje.getFullYear())
   const [diaSelecionado, setDiaSelecionado] = useState(hoje.getDate())
-
-  // ─── Carregar dados ──────────────────────────────────────────
 
   useEffect(() => {
     async function carregar() {
       try {
         setLoading(true)
-
-        // Carregamos reuniões e utilizadores em paralelo
-        // Promise.all espera que AMBOS terminem antes de continuar
-        // É mais rápido do que esperar um de cada vez
         const [dadosReunioes, dadosUtilizadores] = await Promise.all([
           api.get('/reunioes'),
           api.get('/reunioes/utilizadores')
         ])
-
         setReunioes(dadosReunioes)
         setUtilizadores(dadosUtilizadores)
       } catch (err) {
@@ -103,8 +85,6 @@ export default function Reunioes() {
     }
     carregar()
   }, [])
-
-  // ─── Modal ───────────────────────────────────────────────────
 
   const abrirModal = (r = null) => {
     if (r) {
@@ -134,23 +114,17 @@ export default function Reunioes() {
     setEditandoId(null)
   }
 
-  // ─── Guardar ─────────────────────────────────────────────────
-
   const handleGuardar = async (e) => {
     e.preventDefault()
     setGuardando(true)
     try {
       if (editandoId) {
         await api.put(`/reunioes/${editandoId}`, form)
-        // Actualiza localmente sem ir buscar tudo de novo
-        setReunioes(r => r.map(m =>
-          m.id === editandoId ? { ...m, ...form } : m
-        ))
+        setReunioes(r => r.map(m => m.id === editandoId ? { ...m, ...form } : m))
       } else {
-        const resultado = await api.post('/reunioes', form)
-        // Vai buscar a reunião criada para ter os campos gerados pelo servidor
-        const novasReunioes = await api.get('/reunioes')
-        setReunioes(novasReunioes)
+        await api.post('/reunioes', form)
+        const novas = await api.get('/reunioes')
+        setReunioes(novas)
       }
       fecharModal()
     } catch (err) {
@@ -160,34 +134,27 @@ export default function Reunioes() {
     }
   }
 
-  // ─── Apagar ──────────────────────────────────────────────────
-
   const handleApagar = async (id) => {
-    if (!window.confirm('Apagar esta reunião?')) return
     try {
       await api.delete(`/reunioes/${id}`)
       setReunioes(r => r.filter(m => m.id !== id))
+      setConfirmarId(null)
     } catch (err) {
       alert('Erro ao apagar: ' + err.message)
     }
   }
-
-  // ─── Calendário ──────────────────────────────────────────────
 
   const reunioesMes = reunioes.filter(r => {
     const d = new Date(r.data_hora)
     return d.getMonth() === calMes && d.getFullYear() === calAno
   })
 
-  // Reuniões do dia seleccionado no calendário
-  const reunioesDia = reunioesMes.filter(r => {
-    return new Date(r.data_hora).getDate() === diaSelecionado
-  })
+  const reunioesDia = reunioesMes.filter(r =>
+    new Date(r.data_hora).getDate() === diaSelecionado
+  )
 
   const diasComReunioes = new Set(reunioesMes.map(r => new Date(r.data_hora).getDate()))
   const dias = diasDoMes(calAno, calMes)
-
-  // ─── Loading / Erro ──────────────────────────────────────────
 
   if (loading) {
     return (
@@ -209,8 +176,6 @@ export default function Reunioes() {
     )
   }
 
-  // ─── Render ──────────────────────────────────────────────────
-
   return (
     <div className="reunioes-page">
 
@@ -218,16 +183,10 @@ export default function Reunioes() {
         <h1>Reuniões</h1>
         <div className="reunioes-header-actions">
           <div className="toggle-vista">
-            <button
-              className={vista === 'lista' ? 'ativo' : ''}
-              onClick={() => setVista('lista')}
-            >
+            <button className={vista === 'lista' ? 'ativo' : ''} onClick={() => setVista('lista')}>
               <i className="bi bi-list-ul"></i> Lista
             </button>
-            <button
-              className={vista === 'calendario' ? 'ativo' : ''}
-              onClick={() => setVista('calendario')}
-            >
+            <button className={vista === 'calendario' ? 'ativo' : ''} onClick={() => setVista('calendario')}>
               <i className="bi bi-calendar3"></i> Calendário
             </button>
           </div>
@@ -237,7 +196,7 @@ export default function Reunioes() {
         </div>
       </div>
 
-      {/* ── Vista Lista ───────────────────────────────────────── */}
+      {/* ── Lista ─────────────────────────────────────────────── */}
       {vista === 'lista' && (
         <div className="tabela-wrapper">
           <table className="tabela">
@@ -273,9 +232,7 @@ export default function Reunioes() {
                         {formatDataHora(r.data_hora)}
                       </span>
                     </td>
-                    <td>
-                      <span className="tipo-badge">{r.tipo}</span>
-                    </td>
+                    <td><span className="tipo-badge">{r.tipo}</span></td>
                     <td>
                       <span style={{ fontSize: 13 }}>
                         <i className={`bi ${r.formato === 'presencial' ? 'bi-geo-alt' : 'bi-camera-video'}`}></i>
@@ -283,13 +240,9 @@ export default function Reunioes() {
                       </span>
                     </td>
                     <td>
-                      {/* Badge com a cor do estado */}
                       <span style={{
-                        display: 'inline-block',
-                        padding: '3px 10px',
-                        borderRadius: 20,
-                        fontSize: 12,
-                        fontWeight: 600,
+                        display: 'inline-block', padding: '3px 10px', borderRadius: 20,
+                        fontSize: 12, fontWeight: 600,
                         background: getCorEstado(r.estado) + '22',
                         color: getCorEstado(r.estado),
                         border: `1px solid ${getCorEstado(r.estado)}44`
@@ -297,23 +250,13 @@ export default function Reunioes() {
                         {getLabelEstado(r.estado)}
                       </span>
                     </td>
-                    <td style={{ fontSize: 13 }}>
-                      {r.responsavel_trymedia_nome || '—'}
-                    </td>
+                    <td style={{ fontSize: 13 }}>{r.responsavel_trymedia_nome || '—'}</td>
                     <td>
                       <div style={{ display: 'flex', gap: 8 }}>
-                        <button
-                          className="btn-acao editar"
-                          onClick={() => abrirModal(r)}
-                          title="Editar"
-                        >
+                        <button className="btn-acao editar" onClick={() => abrirModal(r)} title="Editar">
                           <i className="bi bi-pencil-square"></i>
                         </button>
-                        <button
-                          className="btn-acao apagar"
-                          onClick={() => handleApagar(r.id)}
-                          title="Apagar"
-                        >
+                        <button className="btn-acao apagar" onClick={() => setConfirmarId(r.id)} title="Apagar">
                           <i className="bi bi-trash"></i>
                         </button>
                       </div>
@@ -325,11 +268,9 @@ export default function Reunioes() {
         </div>
       )}
 
-      {/* ── Vista Calendário ──────────────────────────────────── */}
+      {/* ── Calendário ────────────────────────────────────────── */}
       {vista === 'calendario' && (
         <div className="calendario-wrapper">
-
-          {/* Navegação do mês */}
           <div className="cal-header">
             <button onClick={() => {
               if (calMes === 0) { setCalMes(11); setCalAno(y => y - 1) }
@@ -348,27 +289,18 @@ export default function Reunioes() {
             </button>
           </div>
 
-          {/* Grelha do calendário */}
           <div className="cal-grid">
             {DIAS_SEMANA.map(d => (
               <div key={d} className="cal-dia-semana">{d}</div>
             ))}
             {dias.map((dia, i) => {
-              const ehHoje = dia === hoje.getDate() && calMes === hoje.getMonth() && calAno === hoje.getFullYear()
+              const ehHoje    = dia === hoje.getDate() && calMes === hoje.getMonth() && calAno === hoje.getFullYear()
               const temReuniao = dia && diasComReunioes.has(dia)
               const selecionado = dia === diaSelecionado
-
               return (
                 <div
                   key={i}
-                  className={[
-                    'cal-dia',
-                    !dia ? 'vazio' : '',
-                    ehHoje ? 'hoje' : '',
-                    temReuniao ? 'tem-reuniao' : '',
-                    selecionado ? 'selecionado' : '',
-                  ].join(' ')}
-                  // Ao clicar num dia com reuniões, seleccionamos esse dia
+                  className={['cal-dia', !dia ? 'vazio' : '', ehHoje ? 'hoje' : '', temReuniao ? 'tem-reuniao' : '', selecionado ? 'selecionado' : ''].join(' ')}
                   onClick={() => dia && setDiaSelecionado(dia)}
                   style={{ cursor: dia ? 'pointer' : 'default' }}
                 >
@@ -383,22 +315,16 @@ export default function Reunioes() {
             })}
           </div>
 
-          {/* Reuniões do dia seleccionado */}
           {diaSelecionado && (
             <div className="cal-reunioes-mes">
-              <h3>
-                Reuniões a {diaSelecionado} de {MESES[calMes]}
-              </h3>
+              <h3>Reuniões a {diaSelecionado} de {MESES[calMes]}</h3>
               {reunioesDia.length === 0 ? (
-                <p style={{ color: 'var(--text-muted)', fontSize: 14 }}>
-                  Sem reuniões neste dia.
-                </p>
+                <p style={{ color: 'var(--text-muted)', fontSize: 14 }}>Sem reuniões neste dia.</p>
               ) : (
                 reunioesDia.map(r => (
                   <div
                     key={r.id}
                     className="cal-reuniao-item"
-                    // Clicável para abrir o modal de edição
                     onClick={() => abrirModal(r)}
                     style={{ cursor: 'pointer' }}
                   >
@@ -406,11 +332,8 @@ export default function Reunioes() {
                     <span className="cal-reuniao-titulo">{r.titulo}</span>
                     <span className="tipo-badge">{r.tipo}</span>
                     <span style={{
-                      display: 'inline-block',
-                      padding: '2px 8px',
-                      borderRadius: 20,
-                      fontSize: 11,
-                      fontWeight: 600,
+                      display: 'inline-block', padding: '2px 8px', borderRadius: 20,
+                      fontSize: 11, fontWeight: 600,
                       background: getCorEstado(r.estado) + '22',
                       color: getCorEstado(r.estado),
                     }}>
@@ -435,71 +358,50 @@ export default function Reunioes() {
                 <i className="bi bi-x-lg"></i>
               </button>
             </div>
-
             <form onSubmit={handleGuardar} className="modal-form">
 
-              {/* Título */}
               <div className="form-group">
                 <label>Título *</label>
-                <input
-                  required
-                  value={form.titulo}
+                <input required value={form.titulo}
                   onChange={e => setForm(f => ({ ...f, titulo: e.target.value }))}
-                  placeholder="Ex: Diagnóstico Grupo Alpha"
-                />
+                  placeholder="Ex: Diagnóstico Grupo Alpha" />
               </div>
 
-              {/* Cliente + Responsável da empresa */}
               <div className="form-row">
                 <div className="form-group">
                   <label>Cliente</label>
-                  <input
-                    value={form.cliente}
+                  <input value={form.cliente}
                     onChange={e => setForm(f => ({ ...f, cliente: e.target.value }))}
-                    placeholder="Nome da empresa"
-                  />
+                    placeholder="Nome da empresa" />
                 </div>
                 <div className="form-group">
                   <label>Responsável da Empresa</label>
-                  <input
-                    value={form.responsavel_empresa}
+                  <input value={form.responsavel_empresa}
                     onChange={e => setForm(f => ({ ...f, responsavel_empresa: e.target.value }))}
-                    placeholder="Nome do contacto"
-                  />
+                    placeholder="Nome do contacto" />
                 </div>
               </div>
 
-              {/* Data + Tipo */}
               <div className="form-row">
                 <div className="form-group">
                   <label>Data e Hora *</label>
-                  <input
-                    required
-                    type="datetime-local"
-                    value={form.data_hora}
-                    onChange={e => setForm(f => ({ ...f, data_hora: e.target.value }))}
-                  />
+                  <input required type="datetime-local" value={form.data_hora}
+                    onChange={e => setForm(f => ({ ...f, data_hora: e.target.value }))} />
                 </div>
                 <div className="form-group">
                   <label>Tipo *</label>
-                  <select
-                    value={form.tipo}
-                    onChange={e => setForm(f => ({ ...f, tipo: e.target.value }))}
-                  >
+                  <select value={form.tipo} onChange={e => setForm(f => ({ ...f, tipo: e.target.value }))}>
                     {TIPOS.map(t => <option key={t} value={t}>{t}</option>)}
                   </select>
                 </div>
               </div>
 
-              {/* Estado + Formato */}
               <div className="form-row">
                 <div className="form-group">
                   <label>Estado *</label>
-                  <select
-                    value={form.estado}
+                  <select value={form.estado}
                     onChange={e => setForm(f => ({ ...f, estado: e.target.value }))}
-                    style={{ borderLeft: `4px solid ${getCorEstado(form.estado)}` }}
-                  >
+                    style={{ borderLeft: `4px solid ${getCorEstado(form.estado)}` }}>
                     {ESTADOS.map(e => (
                       <option key={e.valor} value={e.valor}>{e.label}</option>
                     ))}
@@ -507,28 +409,20 @@ export default function Reunioes() {
                 </div>
                 <div className="form-group">
                   <label>Formato *</label>
-                  <select
-                    value={form.formato}
-                    onChange={e => setForm(f => ({ ...f, formato: e.target.value }))}
-                  >
+                  <select value={form.formato} onChange={e => setForm(f => ({ ...f, formato: e.target.value }))}>
                     {FORMATOS.map(f => (
-                      <option key={f} value={f}>
-                        {f.charAt(0).toUpperCase() + f.slice(1)}
-                      </option>
+                      <option key={f} value={f}>{f.charAt(0).toUpperCase() + f.slice(1)}</option>
                     ))}
                   </select>
                 </div>
               </div>
 
-              {/* Responsável TRY MEDIA + Canal */}
               <div className="form-row">
                 <div className="form-group">
                   <label>Responsável TRY MEDIA</label>
-                  <select
-                    value={form.responsavel_trymedia}
-                    onChange={e => setForm(f => ({ ...f, responsavel_trymedia: e.target.value }))}
-                  >
-                    <option value="">— Seleccionar —</option>
+                  <select value={form.responsavel_trymedia}
+                    onChange={e => setForm(f => ({ ...f, responsavel_trymedia: e.target.value }))}>
+                    <option value="">Seleccionar</option>
                     {utilizadores.map(u => (
                       <option key={u.id} value={u.id}>{u.nome}</option>
                     ))}
@@ -536,32 +430,22 @@ export default function Reunioes() {
                 </div>
                 <div className="form-group">
                   <label>Canal de Prospecção</label>
-                  <input
-                    value={form.canal}
+                  <input value={form.canal}
                     onChange={e => setForm(f => ({ ...f, canal: e.target.value }))}
-                    placeholder="Link do Instagram, Google Maps, etc."
-                  />
+                    placeholder="Link do Instagram, Google Maps, etc." />
                 </div>
               </div>
 
-              {/* Notas */}
               <div className="form-group">
                 <label>Notas</label>
-                <textarea
-                  rows={3}
-                  value={form.notas}
+                <textarea rows={3} value={form.notas}
                   onChange={e => setForm(f => ({ ...f, notas: e.target.value }))}
-                  placeholder="Observações sobre a reunião..."
-                />
+                  placeholder="Observações sobre a reunião..." />
               </div>
 
-              {/* Marcado por — informação */}
               <div style={{
-                padding: '10px 14px',
-                background: 'var(--border)',
-                borderRadius: 8,
-                fontSize: 13,
-                color: 'var(--text-muted)'
+                padding: '10px 14px', background: 'var(--border)',
+                borderRadius: 8, fontSize: 13, color: 'var(--text-muted)'
               }}>
                 <i className="bi bi-info-circle"></i>
                 {' '}Esta reunião será registada como marcada por{' '}
@@ -578,6 +462,24 @@ export default function Reunioes() {
               </div>
 
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ── Modal Confirmação Apagar ──────────────────────────── */}
+      {confirmarId && (
+        <div className="modal-overlay" onClick={() => setConfirmarId(null)}>
+          <div className="modal modal-confirm" onClick={e => e.stopPropagation()}>
+            <h2>Apagar reunião?</h2>
+            <p>Esta acção não pode ser revertida.</p>
+            <div className="modal-acoes">
+              <button className="btn-cancelar-modal" onClick={() => setConfirmarId(null)}>
+                Cancelar
+              </button>
+              <button className="btn-apagar-confirm" onClick={() => handleApagar(confirmarId)}>
+                Sim, apagar
+              </button>
+            </div>
           </div>
         </div>
       )}

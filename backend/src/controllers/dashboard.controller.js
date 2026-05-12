@@ -1,12 +1,15 @@
+// backend/src/controllers/dashboard.controller.js
+
+
 const db = require('../config/db')
 const MetaModel = require('../models/meta.model')
-const ReuniaoModel = require('../models/reuniao.model')
+const MetaVendedorModel = require('../models/meta_vendedor.model')
+const TaxaConversaoModel = require('../models/taxa_conversao.model')
 
 const DashboardController = {
 
   // ─────────────────────────────────────────
   // GET /api/dashboard
-  // Devolve todos os KPIs da página principal
   // ─────────────────────────────────────────
   obterDashboard: async (req, res) => {
     try {
@@ -14,33 +17,24 @@ const DashboardController = {
       const filtroVendedor = vendedorId ? 'AND vendedor_id = ?' : ''
       const params = vendedorId ? [vendedorId] : []
 
-      // Total de leads
       const [[{ totalLeads }]] = await db.query(
         `SELECT COUNT(*) AS totalLeads FROM clientes WHERE 1=1 ${filtroVendedor}`, params
       )
-
-      // Fechados este mês
       const [[{ fechados }]] = await db.query(
         `SELECT COUNT(*) AS fechados FROM clientes
          WHERE status = 'fechado'
          AND MONTH(ultimo_contacto) = MONTH(CURDATE())
-         AND YEAR(ultimo_contacto) = YEAR(CURDATE())
+         AND YEAR(ultimo_contacto)  = YEAR(CURDATE())
          ${filtroVendedor}`, params
       )
-
-      // Em negociação
       const [[{ emNegociacao }]] = await db.query(
         `SELECT COUNT(*) AS emNegociacao FROM clientes
          WHERE status = 'negociacao' ${filtroVendedor}`, params
       )
-
-      // Valor total do pipeline
       const [[{ valorPipeline }]] = await db.query(
         `SELECT COALESCE(SUM(valor_estimado), 0) AS valorPipeline
          FROM clientes WHERE 1=1 ${filtroVendedor}`, params
       )
-
-      // Clientes a contactar hoje (sem contacto há mais de 7 dias)
       const [contactarHoje] = await db.query(
         `SELECT id, nome_empresa AS empresa, nicho, whatsapp AS telefone
          FROM clientes
@@ -49,26 +43,18 @@ const DashboardController = {
          ${filtroVendedor}
          LIMIT 5`, params
       )
-
-      // Funil de vendas por fase
       const [funil] = await db.query(
         `SELECT status, COUNT(*) AS qtd FROM clientes
          WHERE 1=1 ${filtroVendedor} GROUP BY status`, params
       )
-
-      // Meta do mês atual
       const meta = await MetaModel.obterMesAtual()
-
-      // Faturamento realizado este mês (clientes fechados)
       const [[{ realizado }]] = await db.query(
         `SELECT COALESCE(SUM(valor_estimado), 0) AS realizado FROM clientes
          WHERE status = 'fechado'
          AND MONTH(ultimo_contacto) = MONTH(CURDATE())
-         AND YEAR(ultimo_contacto) = YEAR(CURDATE())
+         AND YEAR(ultimo_contacto)  = YEAR(CURDATE())
          ${filtroVendedor}`, params
       )
-
-      // Próximas reuniões
       const filtroReuniao = vendedorId ? 'AND criado_por = ?' : ''
       const paramsReuniao = vendedorId ? [vendedorId] : []
       const [reunioes] = await db.query(
@@ -94,64 +80,265 @@ const DashboardController = {
   },
 
   // ─────────────────────────────────────────
-  // GET /api/relatorios (só Admin)
+  // GET /api/relatorios
+  // Vista global — resumo de toda a equipa
   // ─────────────────────────────────────────
-  obterRelatorios: async (req, res) => {
+    obterRelatorios: async (req, res) => {
+      try {
+    const { mes, ano } = req.query
+    const filtraMes = mes && ano
+
+    const condicaoData = filtraMes
+      ? 'AND MONTH(ultimo_contacto) = ? AND YEAR(ultimo_contacto) = ?'
+      : ''
+    const paramsData = filtraMes ? [Number(mes), Number(ano)] : []
+
+    const condicaoCriacao = filtraMes
+      ? 'AND MONTH(criado_em) = ? AND YEAR(criado_em) = ?'
+      : ''
+
+    const mesAno = filtraMes
+      ? `${ano}-${String(mes).padStart(2, '0')}-01`
+      : new Date().toISOString().slice(0, 7) + '-01'
+
+    const [[{ faturamento }]] = await db.query(
+      `SELECT COALESCE(SUM(valor_estimado), 0) AS faturamento
+       FROM clientes WHERE status = 'fechado' ${condicaoData}`,
+      [...paramsData]
+    )
+
+    const [[metaRow]] = await db.query(
+      `SELECT meta_faturamento, meta_reunioes, meta_prospeccoes
+       FROM metas WHERE MONTH(mes_ano) = MONTH(?) AND YEAR(mes_ano) = YEAR(?) LIMIT 1`,
+      [mesAno, mesAno]
+    )
+
+    const [pipeline] = await db.query(
+      `SELECT status AS fase, COUNT(*) AS qtd, COALESCE(SUM(valor_estimado),0) AS valor
+       FROM clientes GROUP BY status`
+    )
+
+    const [[{ totalLeads }]] = await db.query(
+      `SELECT COUNT(*) AS totalLeads FROM clientes WHERE 1=1 ${condicaoCriacao}`,
+      [...paramsData]
+    )
+
+    const [[{ reunioesAgendadas }]] = await db.query(
+      `SELECT COUNT(*) AS reunioesAgendadas FROM reunioes
+       WHERE 1=1 ${filtraMes ? 'AND MONTH(data_hora) = ? AND YEAR(data_hora) = ?' : ''}`,
+      filtraMes ? [Number(mes), Number(ano)] : []
+    )
+
+    const [[{ reunioesRealizadas }]] = await db.query(
+      `SELECT COUNT(*) AS reunioesRealizadas FROM reunioes
+       WHERE estado = 'realizada'
+       ${filtraMes ? 'AND MONTH(data_hora) = ? AND YEAR(data_hora) = ?' : ''}`,
+      filtraMes ? [Number(mes), Number(ano)] : []
+    )
+
+    const taxasEsperadas = await TaxaConversaoModel.obterPorMes(mesAno)
+
+    const [vendedores] = await db.query(
+      `SELECT 
+        u.id, u.nome,
+        COUNT(DISTINCT c.id) AS total_clientes,
+        SUM(CASE WHEN c.status = 'fechado' ${condicaoData} THEN 1 ELSE 0 END) AS fechados_mes,
+        COALESCE(SUM(CASE WHEN c.status = 'fechado' ${condicaoData} THEN c.valor_estimado ELSE 0 END), 0) AS faturamento_mes,
+        COUNT(DISTINCT r.id) AS reunioes_mes
+       FROM utilizadores u
+       LEFT JOIN clientes c ON c.vendedor_id = u.id
+       LEFT JOIN reunioes r ON r.criado_por = u.id
+         ${filtraMes ? 'AND MONTH(r.data_hora) = ? AND YEAR(r.data_hora) = ?' : ''}
+       WHERE u.perfil = 'vendedor'
+       GROUP BY u.id, u.nome
+       ORDER BY faturamento_mes DESC`,
+      [...paramsData, ...paramsData, ...(filtraMes ? [Number(mes), Number(ano)] : [])]
+    )
+
+    // ── Taxas Reais ──────────────────────────────────────────
+    const tiposValidos = ['diagnóstico', 'follow-up', 'proposta']
+    const tiposStr = tiposValidos.map(() => '?').join(',')
+
+    const [[{ totalClientesPeriodo }]] = await db.query(
+      `SELECT COUNT(*) AS totalClientesPeriodo FROM clientes WHERE 1=1 ${condicaoCriacao}`,
+      [...paramsData]
+    )
+
+    const [[{ clientesComInteracao }]] = await db.query(
+      `SELECT COUNT(DISTINCT cliente_id) AS clientesComInteracao FROM interacoes`
+    )
+
+    const [[{ clientesComReuniao }]] = await db.query(
+      `SELECT COUNT(DISTINCT cliente_id) AS clientesComReuniao
+       FROM reunioes WHERE tipo IN (${tiposStr}) AND cliente_id IS NOT NULL`,
+      tiposValidos
+    )
+
+    const [[{ reunioesRealizadasValidas }]] = await db.query(
+      `SELECT COUNT(*) AS reunioesRealizadasValidas
+       FROM reunioes WHERE estado = 'realizada' AND tipo IN (${tiposStr})`,
+      tiposValidos
+    )
+
+    const [[{ reunioesValidas }]] = await db.query(
+      `SELECT COUNT(*) AS reunioesValidas FROM reunioes WHERE tipo IN (${tiposStr})`,
+      tiposValidos
+    )
+
+    const [[{ clientesFechados }]] = await db.query(
+      `SELECT COUNT(*) AS clientesFechados FROM clientes WHERE status = 'fechado' ${condicaoCriacao}`,
+      [...paramsData]
+    )
+
+    const taxasReais = {
+      taxa_conexao:     totalClientesPeriodo > 0
+        ? +((clientesComInteracao / totalClientesPeriodo) * 100).toFixed(1) : 0,
+      taxa_agendamento: clientesComInteracao > 0
+        ? +((clientesComReuniao / clientesComInteracao) * 100).toFixed(1) : 0,
+      taxa_realizacao:  reunioesValidas > 0
+        ? +((reunioesRealizadasValidas / reunioesValidas) * 100).toFixed(1) : 0,
+      taxa_fechamento:  totalClientesPeriodo > 0
+        ? +((clientesFechados / totalClientesPeriodo) * 100).toFixed(1) : 0,
+    }
+
+    res.json({
+      faturamento:  Number(faturamento),
+      meta:         metaRow?.meta_faturamento || 0,
+      pipeline,
+      metricas:     { totalLeads, reunioesAgendadas, reunioesRealizadas },
+      taxasEsperadas,
+      taxasReais,
+      vendedores
+    })
+
+  } catch (err) {
+    console.error('Erro nos relatórios:', err)
+    res.status(500).json({ mensagem: 'Erro interno.' })
+  }
+    },
+
+
+  // ─────────────────────────────────────────
+  // GET /api/relatorios/vendedor/:id
+  // Vista individual de um vendedor
+  // ─────────────────────────────────────────
+  obterRelatorioVendedor: async (req, res) => {
     try {
+      const vendedorId = req.params.id
       const { mes, ano } = req.query
       const mesAtual = mes || new Date().getMonth() + 1
       const anoAtual = ano || new Date().getFullYear()
 
-      const [[{ faturamento }]] = await db.query(
-        `SELECT COALESCE(SUM(valor_estimado), 0) AS faturamento
-         FROM clientes WHERE status = 'fechado'
+      // Nome do vendedor
+      const [[vendedor]] = await db.query(
+        'SELECT id, nome, email, criado_em FROM utilizadores WHERE id = ?',
+        [vendedorId]
+      )
+      if (!vendedor) {
+        return res.status(404).json({ mensagem: 'Vendedor não encontrado.' })
+      }
+
+      // Clientes deste vendedor
+      const [[{ totalClientes }]] = await db.query(
+        'SELECT COUNT(*) AS totalClientes FROM clientes WHERE vendedor_id = ?',
+        [vendedorId]
+      )
+
+      // Fechados este mês
+      const [[{ fechadosMes }]] = await db.query(
+        `SELECT COUNT(*) AS fechadosMes FROM clientes
+         WHERE vendedor_id = ? AND status = 'fechado'
          AND MONTH(ultimo_contacto) = ? AND YEAR(ultimo_contacto) = ?`,
-        [mesAtual, anoAtual]
+        [vendedorId, mesAtual, anoAtual]
       )
 
-      const [[metaRow]] = await db.query(
-        `SELECT meta_faturamento, meta_reunioes, meta_prospeccoes
-         FROM metas WHERE MONTH(mes_ano) = ? AND YEAR(mes_ano) = ? LIMIT 1`,
-        [mesAtual, anoAtual]
+      // Faturamento deste mês
+      const [[{ faturamentoMes }]] = await db.query(
+        `SELECT COALESCE(SUM(valor_estimado), 0) AS faturamentoMes
+         FROM clientes
+         WHERE vendedor_id = ? AND status = 'fechado'
+         AND MONTH(ultimo_contacto) = ? AND YEAR(ultimo_contacto) = ?`,
+        [vendedorId, mesAtual, anoAtual]
       )
 
+      // Pipeline deste vendedor
       const [pipeline] = await db.query(
         `SELECT status AS fase, COUNT(*) AS qtd, COALESCE(SUM(valor_estimado),0) AS valor
-         FROM clientes GROUP BY status`
+         FROM clientes WHERE vendedor_id = ? GROUP BY status`,
+        [vendedorId]
       )
 
-      const [[{ totalLeads }]] = await db.query(
-        `SELECT COUNT(*) AS totalLeads FROM clientes
-         WHERE MONTH(criado_em) = ? AND YEAR(criado_em) = ?`,
-        [mesAtual, anoAtual]
-      )
-
+      // Reuniões deste mês
       const [[{ reunioesAgendadas }]] = await db.query(
         `SELECT COUNT(*) AS reunioesAgendadas FROM reunioes
-         WHERE MONTH(data_hora) = ? AND YEAR(data_hora) = ?`,
-        [mesAtual, anoAtual]
+         WHERE criado_por = ?
+         AND MONTH(data_hora) = ? AND YEAR(data_hora) = ?`,
+        [vendedorId, mesAtual, anoAtual]
+      )
+
+      const [[{ reunioesRealizadas }]] = await db.query(
+        `SELECT COUNT(*) AS reunioesRealizadas FROM reunioes
+         WHERE criado_por = ? AND estado = 'realizada'
+         AND MONTH(data_hora) = ? AND YEAR(data_hora) = ?`,
+        [vendedorId, mesAtual, anoAtual]
+      )
+
+      // Meta de reuniões deste vendedor neste mês
+      const mesAno = `${anoAtual}-${String(mesAtual).padStart(2, '0')}-01`
+      const metasVendedor = await MetaVendedorModel.listarPorMes(mesAno)
+      const metaVendedor = metasVendedor.find(m => m.vendedor_id == vendedorId)
+
+      // Últimas interacções deste vendedor
+      const [ultimasInteracoes] = await db.query(
+        `SELECT i.tipo, i.nota, i.data, c.nome_empresa AS cliente
+         FROM interacoes i
+         JOIN clientes c ON i.cliente_id = c.id
+         WHERE i.utilizador_id = ?
+         ORDER BY i.data DESC
+         LIMIT 10`,
+        [vendedorId]
       )
 
       res.json({
-        faturamento: Number(faturamento),
-        meta: metaRow?.meta_faturamento || 0,
+        vendedor,
+        metricas: {
+          totalClientes,
+          fechadosMes,
+          faturamentoMes: Number(faturamentoMes),
+          reunioesAgendadas,
+          reunioesRealizadas,
+          metaReunioes: metaVendedor?.meta_reunioes || 0
+        },
         pipeline,
-        metricas: { totalLeads, reunioesAgendadas }
+        ultimasInteracoes
       })
     } catch (err) {
-      console.error('Erro nos relatórios:', err)
+      console.error('Erro no relatório do vendedor:', err)
       res.status(500).json({ mensagem: 'Erro interno.' })
     }
   },
 
   // ─────────────────────────────────────────
-  // PUT /api/configuracoes/metas (só Admin)
+  // PUT /api/configuracoes/metas
   // ─────────────────────────────────────────
   guardarMetas: async (req, res) => {
-    const { faturamento, reunioes, prospeccoes } = req.body
+    const { faturamento, reunioes, prospeccoes, metasVendedor } = req.body
     try {
       const mesAno = new Date().toISOString().slice(0, 7) + '-01'
+
+      // Guarda meta global
       await MetaModel.guardar(mesAno, faturamento, reunioes, prospeccoes)
+
+      // Guarda metas individuais dos vendedores
+      // metasVendedor é um array: [{ vendedor_id: 1, meta_reunioes: 20 }, ...]
+      if (metasVendedor && Array.isArray(metasVendedor)) {
+        for (const mv of metasVendedor) {
+          if (mv.vendedor_id && mv.meta_reunioes !== undefined) {
+            await MetaVendedorModel.guardar(mesAno, mv.vendedor_id, mv.meta_reunioes)
+          }
+        }
+      }
+
       res.json({ mensagem: 'Metas guardadas.' })
     } catch (err) {
       console.error('Erro ao guardar metas:', err)
@@ -160,7 +347,40 @@ const DashboardController = {
   },
 
   // ─────────────────────────────────────────
-  // GET /api/utilizadores (só Admin)
+  // PUT /api/configuracoes/taxas
+  // ─────────────────────────────────────────
+  guardarTaxas: async (req, res) => {
+    try {
+      const mesAno = new Date().toISOString().slice(0, 7) + '-01'
+      await TaxaConversaoModel.guardar(mesAno, req.body)
+      res.json({ mensagem: 'Taxas guardadas.' })
+    } catch (err) {
+      console.error('Erro ao guardar taxas:', err)
+      res.status(500).json({ mensagem: 'Erro interno.' })
+    }
+  },
+
+  // ─────────────────────────────────────────
+  // GET /api/configuracoes/metas
+  // Carrega metas actuais para preencher o formulário
+  // ─────────────────────────────────────────
+  obterConfiguracoes: async (req, res) => {
+    try {
+      const mesAno = new Date().toISOString().slice(0, 7) + '-01'
+
+      const metaGlobal = await MetaModel.obterMesAtual()
+      const metasVendedor = await MetaVendedorModel.listarPorMes(mesAno)
+      const taxas = await TaxaConversaoModel.obterPorMes(mesAno)
+
+      res.json({ metaGlobal, metasVendedor, taxas })
+    } catch (err) {
+      console.error('Erro ao obter configurações:', err)
+      res.status(500).json({ mensagem: 'Erro interno.' })
+    }
+  },
+
+  // ─────────────────────────────────────────
+  // GET /api/utilizadores
   // ─────────────────────────────────────────
   listarUtilizadores: async (req, res) => {
     try {
@@ -175,7 +395,7 @@ const DashboardController = {
   },
 
   // ─────────────────────────────────────────
-  // DELETE /api/utilizadores/:id (só Admin)
+  // DELETE /api/utilizadores/:id
   // ─────────────────────────────────────────
   apagarUtilizador: async (req, res) => {
     try {
@@ -192,7 +412,6 @@ const DashboardController = {
 
   // ─────────────────────────────────────────
   // PUT /api/perfil
-  // Atualiza dados do próprio utilizador logado
   // ─────────────────────────────────────────
   atualizarPerfil: async (req, res) => {
     const bcrypt = require('bcryptjs')

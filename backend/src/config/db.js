@@ -9,6 +9,9 @@ const pool = mysql.createPool({
   database: process.env.DB_NAME     || 'crm_try_media',
   waitForConnections: true,
   connectionLimit: 10,
+
+  timezone: 'Z',
+  dateStrings: true,
 })
 
 // Testa a ligação ao arrancar

@@ -20,10 +20,12 @@ const MESES = [
 ]
 const DIAS_SEMANA = ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom']
 
+// ← lembrete_antecedencia adicionado
 const FORM_VAZIO = {
   titulo: '', cliente: '', data_hora: '', tipo: 'diagnóstico',
   notas: '', canal: '', responsavel_empresa: '',
-  estado: 'agendado', formato: 'online', responsavel_trymedia: ''
+  estado: 'agendado', formato: 'online', responsavel_trymedia: '',
+  lembrete_antecedencia: ''
 }
 
 function formatDataHora(str) {
@@ -60,7 +62,7 @@ export default function Reunioes() {
   const [form, setForm]             = useState(FORM_VAZIO)
   const [editandoId, setEditandoId] = useState(null)
   const [guardando, setGuardando]   = useState(false)
-  const [confirmarId, setConfirmarId] = useState(null)  // ← dentro do componente
+  const [confirmarId, setConfirmarId] = useState(null)
 
   const hoje = new Date()
   const [calMes, setCalMes]               = useState(hoje.getMonth())
@@ -99,6 +101,7 @@ export default function Reunioes() {
         estado:               r.estado || 'agendado',
         formato:              r.formato || 'online',
         responsavel_trymedia: r.responsavel_trymedia || '',
+        lembrete_antecedencia: r.lembrete_antecedencia || '', // ← mapeado ao editar
       })
       setEditandoId(r.id)
     } else {
@@ -294,7 +297,7 @@ export default function Reunioes() {
               <div key={d} className="cal-dia-semana">{d}</div>
             ))}
             {dias.map((dia, i) => {
-              const ehHoje    = dia === hoje.getDate() && calMes === hoje.getMonth() && calAno === hoje.getFullYear()
+              const ehHoje     = dia === hoje.getDate() && calMes === hoje.getMonth() && calAno === hoje.getFullYear()
               const temReuniao = dia && diasComReunioes.has(dia)
               const selecionado = dia === diaSelecionado
               return (
@@ -433,6 +436,35 @@ export default function Reunioes() {
                   <input value={form.canal}
                     onChange={e => setForm(f => ({ ...f, canal: e.target.value }))}
                     placeholder="Link do Instagram, Google Maps, etc." />
+                </div>
+              </div>
+
+              {/* ── Lembrete — campo novo ───────────────────────── */}
+              <div className="form-row">
+                <div className="form-group">
+                  <label>
+                    <i className="bi bi-bell-fill" style={{ marginRight: 6, color: 'var(--accent)' }}></i>
+                    Lembrete por e-mail
+                  </label>
+                  <select
+                    value={form.lembrete_antecedencia}
+                    onChange={e => setForm(f => ({ ...f, lembrete_antecedencia: e.target.value }))}
+                  >
+                    <option value="">Sem lembrete</option>
+                    <option value="15">15 minutos antes</option>
+                    <option value="30">30 minutos antes</option>
+                    <option value="60">1 hora antes</option>
+                    <option value="120">2 horas antes</option>
+                    <option value="1440">1 dia antes</option>
+                  </select>
+                </div>
+                <div className="form-group" style={{ justifyContent: 'flex-end', paddingTop: 28 }}>
+                  {form.lembrete_antecedencia && (
+                    <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: 0 }}>
+                      <i className="bi bi-info-circle" style={{ marginRight: 6 }}></i>
+                      O criador e o responsável TRY MEDIA receberão o lembrete por e-mail.
+                    </p>
+                  )}
                 </div>
               </div>
 

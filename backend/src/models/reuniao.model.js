@@ -41,21 +41,23 @@ const ReuniaoModel = {
   criar: async (dados) => {
     const [result] = await db.query(
       `INSERT INTO reunioes 
-        (titulo, cliente_id, data_hora, tipo, notas, canal, 
-         responsavel_empresa, estado, formato, responsavel_trymedia, criado_por)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      (titulo, cliente_id, data_hora, tipo, notas, canal,
+       responsavel_empresa, estado, formato, responsavel_trymedia,
+       criado_por, lembrete_antecedencia)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         dados.titulo,
-        dados.cliente_id   || null,
+        dados.cliente_id || null,
         dados.data_hora,
-        dados.tipo         || 'diagnóstico',
-        dados.notas        || '',
-        dados.canal        || null,
-        dados.responsavel_empresa  || null,
-        dados.estado       || 'agendado',
-        dados.formato      || 'online',
+        dados.tipo || 'diagnóstico',
+        dados.notas || '',
+        dados.canal || null,
+        dados.responsavel_empresa || null,
+        dados.estado || 'agendado',
+        dados.formato || 'online',
         dados.responsavel_trymedia || null,
-        dados.criado_por
+        dados.criado_por,
+        dados.lembrete_antecedencia || null,
       ]
     )
     return result.insertId
@@ -64,28 +66,31 @@ const ReuniaoModel = {
   atualizar: async (id, dados) => {
     await db.query(
       `UPDATE reunioes SET
-        titulo = ?,
-        cliente_id = ?,
-        data_hora = ?,
-        tipo = ?,
-        notas = ?,
-        canal = ?,
-        responsavel_empresa = ?,
-        estado = ?,
-        formato = ?,
-        responsavel_trymedia = ?
-       WHERE id = ?`,
+      titulo = ?,
+      cliente_id = ?,
+      data_hora = ?,
+      tipo = ?,
+      notas = ?,
+      canal = ?,
+      responsavel_empresa = ?,
+      estado = ?,
+      formato = ?,
+      responsavel_trymedia = ?,
+      lembrete_antecedencia = ?,
+      lembrete_enviado = 0
+     WHERE id = ?`,
       [
         dados.titulo,
-        dados.cliente_id   || null,
+        dados.cliente_id || null,
         dados.data_hora,
         dados.tipo,
         dados.notas,
-        dados.canal        || null,
-        dados.responsavel_empresa  || null,
+        dados.canal || null,
+        dados.responsavel_empresa || null,
         dados.estado,
         dados.formato,
         dados.responsavel_trymedia || null,
+        dados.lembrete_antecedencia || null,
         id
       ]
     )

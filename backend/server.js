@@ -22,4 +22,10 @@ app.get('/api/health', (req, res) => res.json({ status: 'ok' }))
 app.use((req, res) => res.status(404).json({ mensagem: 'Rota não encontrada.' }))
 app.use((err, req, res, next) => res.status(500).json({ mensagem: 'Erro interno do servidor.' }))
 
+
+const { iniciarLembretes } = require('./src/services/lembrete.service')
+// ...
+iniciarLembretes() // adiciona mesmo antes do app.listen
+
+
 app.listen(PORT, () => console.log(`🚀 Servidor a correr em http://localhost:${PORT}`))

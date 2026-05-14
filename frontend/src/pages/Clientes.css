@@ -1,0 +1,155 @@
+.clientes-page {
+  padding: 32px;
+}
+
+.clientes-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.clientes-header h1 {
+  font-size: 26px;
+  font-weight: 700;
+}
+
+.clientes-totais {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+}
+
+.clientes-totais .kpi-card {
+  flex: 1;
+  min-width: 180px;
+}
+
+.clientes-secao-titulo {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.clientes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 16px;
+  margin-bottom: 40px;
+}
+
+.deal-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.deal-card.pipeline {
+  border-top: 3px solid #27ae60;
+}
+
+.deal-card.avulso {
+  border-top: 3px solid var(--accent);
+}
+
+.deal-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 4px;
+}
+
+.deal-card-nome {
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--text);
+}
+
+.deal-card-valor {
+  font-weight: 700;
+  font-size: 15px;
+  white-space: nowrap;
+}
+
+.deal-card.pipeline .deal-card-valor { color: #27ae60; }
+.deal-card.avulso  .deal-card-valor { color: var(--accent); }
+
+.deal-card-desc {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.deal-card-meta {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.deal-card-data {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.deal-card-notas {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.4;
+  margin: 4px 0;
+}
+
+.deal-card-actions {
+  margin-top: 8px;
+  display: flex;
+  gap: 8px;
+}
+
+.btn-ver-ficha {
+  flex: 1;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+  color: var(--text);
+  font-size: 13px;
+  transition: background 0.15s;
+}
+
+.btn-ver-ficha:hover { background: rgba(255,255,255,0.05); }
+
+.btn-remover-deal {
+  background: rgba(255, 80, 80, 0.1);
+  border: 1px solid rgba(255, 80, 80, 0.3);
+  border-radius: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+  color: #ff8a8a;
+  font-size: 13px;
+  transition: background 0.15s;
+}
+
+.btn-remover-deal:hover { background: rgba(255, 80, 80, 0.2); }
+
+.clientes-empty {
+  color: var(--text-muted);
+  font-size: 14px;
+  padding: 20px 0;
+}
+
+.clientes-empty a {
+  color: var(--accent);
+  cursor: pointer;
+  text-decoration: underline;
+  background: none;
+  border: none;
+  font-size: 14px;
+}

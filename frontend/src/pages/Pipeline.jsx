@@ -186,7 +186,7 @@ export default function Pipeline() {
     <div className="pipeline-page">
 
       <div className="pipeline-header">
-        <h1>Pipeline de Clientes</h1>
+        <h1>Pipeline</h1>
         <div className="pipeline-header-actions">
           <select 
             className="filtro-status"
@@ -199,7 +199,7 @@ export default function Pipeline() {
             ))}
           </select>
           <button className="btn-novo" onClick={() => abrirModal()}>
-            + Novo Cliente
+            + Novo Lead
           </button>
         </div>
       </div>

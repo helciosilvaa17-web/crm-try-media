@@ -415,3 +415,6 @@
   border-radius: 8px;
 }
 
+.modal-confirm .modal-acoes {
+  justify-content: center;
+}

@@ -5,24 +5,25 @@ import './Reunioes.css'
 const TIPOS = ['diagnóstico', 'follow-up', 'proposta', 'reunião interna', 'outro']
 const FORMATOS = ['online', 'presencial']
 
+
 const ESTADOS = [
-  { valor: 'agendado',           label: 'Agendado',           cor: '#3498db' },
-  { valor: 'por confirmacao',    label: 'Por Confirmação',    cor: '#f39c12' },
+  { valor: 'agendado', label: 'Agendado', cor: '#3498db' },
+  { valor: 'por confirmacao', label: 'Por Confirmação', cor: '#f39c12' },
   { valor: 'sem comparecimento', label: 'Sem Comparecimento', cor: '#e67e22' },
-  { valor: 'remarcado',          label: 'Remarcado',          cor: '#9b59b6' },
-  { valor: 'cancelado',          label: 'Cancelado',          cor: '#e74c3c' },
-  { valor: 'realizada',          label: 'Realizada',          cor: '#27ae60' },
+  { valor: 'remarcado', label: 'Remarcado', cor: '#9b59b6' },
+  { valor: 'cancelado', label: 'Cancelado', cor: '#e74c3c' },
+  { valor: 'realizada', label: 'Realizada', cor: '#27ae60' },
 ]
 
 const MESES = [
-  'Janeiro','Fevereiro','Março','Abril','Maio','Junho',
-  'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'
+  'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+  'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
 ]
-const DIAS_SEMANA = ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom']
+const DIAS_SEMANA = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']
 
 // ← lembrete_antecedencia adicionado
 const FORM_VAZIO = {
-  titulo: '', cliente: '', data_hora: '', tipo: 'diagnóstico',
+  titulo: '', cliente_id: '', cliente_nome: '', data_hora: '', tipo: 'diagnóstico',
   notas: '', canal: '', responsavel_empresa: '',
   estado: 'agendado', formato: 'online', responsavel_trymedia: '',
   lembrete_antecedencia: ''
@@ -36,7 +37,7 @@ function formatDataHora(str) {
 
 function diasDoMes(ano, mes) {
   const primeiro = new Date(ano, mes, 1)
-  const ultimo   = new Date(ano, mes + 1, 0)
+  const ultimo = new Date(ano, mes + 1, 0)
   const inicioSemana = (primeiro.getDay() + 6) % 7
   const dias = []
   for (let i = 0; i < inicioSemana; i++) dias.push(null)
@@ -53,32 +54,35 @@ function getLabelEstado(valor) {
 }
 
 export default function Reunioes() {
-  const [vista, setVista]           = useState('lista')
-  const [reunioes, setReunioes]     = useState([])
+  const [vista, setVista] = useState('lista')
+  const [reunioes, setReunioes] = useState([])
   const [utilizadores, setUtilizadores] = useState([])
-  const [loading, setLoading]       = useState(true)
-  const [erro, setErro]             = useState(null)
+  const [clientes, setClientes] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [erro, setErro] = useState(null)
   const [modalAberto, setModalAberto] = useState(false)
-  const [form, setForm]             = useState(FORM_VAZIO)
+  const [form, setForm] = useState(FORM_VAZIO)
   const [editandoId, setEditandoId] = useState(null)
-  const [guardando, setGuardando]   = useState(false)
+  const [guardando, setGuardando] = useState(false)
   const [confirmarId, setConfirmarId] = useState(null)
 
   const hoje = new Date()
-  const [calMes, setCalMes]               = useState(hoje.getMonth())
-  const [calAno, setCalAno]               = useState(hoje.getFullYear())
+  const [calMes, setCalMes] = useState(hoje.getMonth())
+  const [calAno, setCalAno] = useState(hoje.getFullYear())
   const [diaSelecionado, setDiaSelecionado] = useState(hoje.getDate())
 
   useEffect(() => {
     async function carregar() {
       try {
         setLoading(true)
-        const [dadosReunioes, dadosUtilizadores] = await Promise.all([
+        const [dadosReunioes, dadosUtilizadores, dadosClientes] = await Promise.all([
           api.get('/reunioes'),
-          api.get('/reunioes/utilizadores')
+          api.get('/reunioes/utilizadores'),
+          api.get('/clientes')
         ])
         setReunioes(dadosReunioes)
         setUtilizadores(dadosUtilizadores)
+        setClientes(dadosClientes)
       } catch (err) {
         setErro(err.message)
       } finally {
@@ -91,15 +95,16 @@ export default function Reunioes() {
   const abrirModal = (r = null) => {
     if (r) {
       setForm({
-        titulo:               r.titulo || '',
-        cliente:              r.cliente_nome || '',
-        data_hora:            r.data_hora ? r.data_hora.slice(0, 16) : '',
-        tipo:                 r.tipo || 'diagnóstico',
-        notas:                r.notas || '',
-        canal:                r.canal || '',
-        responsavel_empresa:  r.responsavel_empresa || '',
-        estado:               r.estado || 'agendado',
-        formato:              r.formato || 'online',
+        titulo: r.titulo || '',
+        cliente_id: r.cliente_id || '',
+        cliente_nome: r.cliente_nome || '',
+        data_hora: r.data_hora ? r.data_hora.slice(0, 16) : '',
+        tipo: r.tipo || 'diagnóstico',
+        notas: r.notas || '',
+        canal: r.canal || '',
+        responsavel_empresa: r.responsavel_empresa || '',
+        estado: r.estado || 'agendado',
+        formato: r.formato || 'online',
         responsavel_trymedia: r.responsavel_trymedia || '',
         lembrete_antecedencia: r.lembrete_antecedencia || '', // ← mapeado ao editar
       })
@@ -297,7 +302,7 @@ export default function Reunioes() {
               <div key={d} className="cal-dia-semana">{d}</div>
             ))}
             {dias.map((dia, i) => {
-              const ehHoje     = dia === hoje.getDate() && calMes === hoje.getMonth() && calAno === hoje.getFullYear()
+              const ehHoje = dia === hoje.getDate() && calMes === hoje.getMonth() && calAno === hoje.getFullYear()
               const temReuniao = dia && diasComReunioes.has(dia)
               const selecionado = dia === diaSelecionado
               return (
@@ -372,10 +377,16 @@ export default function Reunioes() {
 
               <div className="form-row">
                 <div className="form-group">
-                  <label>Cliente</label>
-                  <input value={form.cliente}
-                    onChange={e => setForm(f => ({ ...f, cliente: e.target.value }))}
-                    placeholder="Nome da empresa" />
+                  <label>Cliente / Lead</label>
+                  <select
+                    value={form.cliente_id}
+                    onChange={e => setForm(f => ({ ...f, cliente_id: e.target.value }))}
+                  >
+                    <option value="">— Sem cliente associado —</option>
+                    {clientes.map(c => (
+                      <option key={c.id} value={c.id}>{c.nome_empresa}</option>
+                    ))}
+                  </select>
                 </div>
                 <div className="form-group">
                   <label>Responsável da Empresa</label>

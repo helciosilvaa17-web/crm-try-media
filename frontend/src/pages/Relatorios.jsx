@@ -149,7 +149,7 @@ export default function Relatorios() {
             </div>
             <div className="rel-kpi">
               <span className="rel-kpi-label">Meta Mensal</span>
-              <span className="rel-kpi-valor muted">{fmt(dadosGlobais.meta)}</span>
+              <span className="rel-kpi-valor">{fmt(dadosGlobais.meta)}</span>
             </div>
             <div className="rel-kpi">
               <span className="rel-kpi-label">% da Meta</span>

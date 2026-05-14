@@ -66,38 +66,14 @@ const ReunioesController = {
   },
 
   atualizar: async (req, res) => {
-    try {
-      await ReuniaoModel.atualizar(req.params.id, req.body)
-
-      // Busca a reunião completa com os e-mails dos responsáveis
-      const [[reuniao]] = await db.query(`
-      SELECT r.*, c.nome_empresa AS cliente_nome,
-        criador.email AS criador_email,
-        resp.email    AS resp_email
-      FROM reunioes r
-      LEFT JOIN clientes      c       ON r.cliente_id           = c.id
-      LEFT JOIN utilizadores  criador ON r.criado_por           = criador.id
-      LEFT JOIN utilizadores  resp    ON r.responsavel_trymedia = resp.id
-      WHERE r.id = ?
-    `, [id])
-
-      // Envia confirmação (sem bloquear a resposta em caso de erro de e-mail)
-      const emails = new Set()
-      if (reuniao.criador_email) emails.add(reuniao.criador_email)
-      if (reuniao.resp_email) emails.add(reuniao.resp_email)
-      if (emails.size > 0) {
-        enviarConfirmacao(reuniao, [...emails]).catch(err =>
-          console.error('Erro ao enviar confirmação:', err.message)
-        )
-      }
-
-
-      res.json({ mensagem: 'Reunião actualizada.' })
-    } catch (err) {
-      console.error('Erro ao actualizar reunião:', err)
-      res.status(500).json({ mensagem: 'Erro interno.' })
-    }
-  },
+  try {
+    await ReuniaoModel.atualizar(req.params.id, req.body)
+    res.json({ mensagem: 'Reunião actualizada.' })
+  } catch (err) {
+    console.error('Erro ao actualizar reunião:', err)
+    res.status(500).json({ mensagem: 'Erro interno.' })
+  }
+},
 
   apagar: async (req, res) => {
     try {

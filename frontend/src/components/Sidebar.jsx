@@ -15,7 +15,7 @@ export default function Sidebar() {
     { to: '/dashboard',     icon: 'bi-bar-chart-fill',       label: 'Dashboard'      },
     { to: '/reunioes',      icon: 'bi-calendar3',            label: 'Reuniões'       },
     { to: '/relatorios',    icon: 'bi-clipboard-check-fill', label: 'Relatórios', adminOnly: true },
- { to: '/configuracoes', icon: 'bi-gear',                 label: 'Configurações', adminOnly: true },
+    { to: '/configuracoes', icon: 'bi-gear',                 label: 'Configurações', adminOnly: true },
   ]
 
   function handleLogout() {

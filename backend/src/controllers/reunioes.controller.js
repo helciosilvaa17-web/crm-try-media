@@ -51,7 +51,6 @@ const ReunioesController = {
   },
 
   atualizar: async (req, res) => {
-<<<<<<< Updated upstream
   try {
     await ReuniaoModel.atualizar(req.params.id, req.body)
     res.json({ mensagem: 'Reunião actualizada.' })
@@ -60,16 +59,6 @@ const ReunioesController = {
     res.status(500).json({ mensagem: 'Erro interno.' })
   }
 },
-=======
-    try {
-      await ReuniaoModel.atualizar(req.params.id, req.body)
-      res.json({ mensagem: 'Reunião actualizada.' })
-    } catch (err) {
-      console.error('Erro ao actualizar reunião:', err)
-      res.status(500).json({ mensagem: 'Erro interno.' })
-    }
-  },
->>>>>>> Stashed changes
 
   apagar: async (req, res) => {
     try {

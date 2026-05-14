@@ -1,19 +1,19 @@
 // backend/src/controllers/reunioes.controller.js
 
-const ReuniaoModel = require('../models/reuniao.model')
-const db = require('../config/db')
-const { enviarConfirmacao } = require('../services/email.service')
+const ReuniaoModel    = require('../models/reuniao.model')
+const UtilizadorModel = require('../models/utilizador.model')
+const db              = require('../config/db')
+const { enviarEmailNovaReuniao } = require('../services/email.service')
 
 const ReunioesController = {
 
   listar: async (req, res) => {
     try {
       const filtros = {
-        mes: req.query.mes,
-        ano: req.query.ano,
+        mes:    req.query.mes,
+        ano:    req.query.ano,
         estado: req.query.estado
       }
-      // Vendedor só vê as suas reuniões
       if (req.utilizador.perfil === 'vendedor') {
         filtros.criado_por = req.utilizador.id
       }
@@ -30,35 +30,20 @@ const ReunioesController = {
     if (!titulo || !data_hora) {
       return res.status(400).json({ mensagem: 'Título e data são obrigatórios.' })
     }
+
     try {
+      // 1. Criar a reunião na base de dados
       const id = await ReuniaoModel.criar({
         ...req.body,
         criado_por: req.utilizador.id
       })
 
-      // Busca a reunião completa com os e-mails dos responsáveis
-      const [[reuniao]] = await db.query(`
-      SELECT r.*, c.nome_empresa AS cliente_nome,
-        criador.email AS criador_email,
-        resp.email    AS resp_email
-      FROM reunioes r
-      LEFT JOIN clientes      c       ON r.cliente_id           = c.id
-      LEFT JOIN utilizadores  criador ON r.criado_por           = criador.id
-      LEFT JOIN utilizadores  resp    ON r.responsavel_trymedia = resp.id
-      WHERE r.id = ?
-    `, [id])
-
-      // Envia confirmação (sem bloquear a resposta em caso de erro de e-mail)
-      const emails = new Set()
-      if (reuniao.criador_email) emails.add(reuniao.criador_email)
-      if (reuniao.resp_email) emails.add(reuniao.resp_email)
-      if (emails.size > 0) {
-        enviarConfirmacao(reuniao, [...emails]).catch(err =>
-          console.error('Erro ao enviar confirmação:', err.message)
-        )
-      }
-
+      // 2. Responder imediatamente ao frontend (não bloquear por causa do email)
       res.status(201).json({ mensagem: 'Reunião criada.', id })
+
+      // 3. Enviar email em background (não await aqui para não atrasar a resposta)
+      enviarEmailReuniaoBackground(id, req.body)
+
     } catch (err) {
       console.error('Erro ao criar reunião:', err)
       res.status(500).json({ mensagem: 'Erro interno.' })
@@ -66,6 +51,7 @@ const ReunioesController = {
   },
 
   atualizar: async (req, res) => {
+<<<<<<< Updated upstream
   try {
     await ReuniaoModel.atualizar(req.params.id, req.body)
     res.json({ mensagem: 'Reunião actualizada.' })
@@ -74,6 +60,16 @@ const ReunioesController = {
     res.status(500).json({ mensagem: 'Erro interno.' })
   }
 },
+=======
+    try {
+      await ReuniaoModel.atualizar(req.params.id, req.body)
+      res.json({ mensagem: 'Reunião actualizada.' })
+    } catch (err) {
+      console.error('Erro ao actualizar reunião:', err)
+      res.status(500).json({ mensagem: 'Erro interno.' })
+    }
+  },
+>>>>>>> Stashed changes
 
   apagar: async (req, res) => {
     try {
@@ -85,8 +81,6 @@ const ReunioesController = {
     }
   },
 
-  // Novo endpoint — devolve os utilizadores para o selector
-  // de "Responsável TRY MEDIA" no formulário do frontend
   listarUtilizadores: async (req, res) => {
     try {
       const [rows] = await db.query(
@@ -96,6 +90,46 @@ const ReunioesController = {
     } catch (err) {
       res.status(500).json({ mensagem: 'Erro interno.' })
     }
+  }
+}
+
+// ─── Função auxiliar: enviar email em background ─────────────────────────────
+async function enviarEmailReuniaoBackground(reuniaoId, dadosReuniao) {
+  try {
+    // Determinar o responsável: usa responsavel_trymedia se existir, senão o criador
+    const idResponsavel = dadosReuniao.responsavel_trymedia || dadosReuniao.criado_por
+
+    if (!idResponsavel) {
+      console.log('⚠️  Reunião sem responsável definido — email não enviado.')
+      return
+    }
+
+    // Buscar dados do responsável (nome + email)
+    const vendedor = await UtilizadorModel.buscarPorId(idResponsavel)
+
+    if (!vendedor || !vendedor.email) {
+      console.log(`⚠️  Utilizador ${idResponsavel} não encontrado ou sem email.`)
+      return
+    }
+
+    // Buscar nome do cliente se existir
+    let cliente_nome = 'Não especificado'
+    if (dadosReuniao.cliente_id) {
+      const [rows] = await require('../config/db').query(
+        'SELECT nome_empresa FROM clientes WHERE id = ?',
+        [dadosReuniao.cliente_id]
+      )
+      if (rows[0]) cliente_nome = rows[0].nome_empresa
+    }
+
+    await enviarEmailNovaReuniao(vendedor, {
+      ...dadosReuniao,
+      cliente_nome
+    })
+
+  } catch (err) {
+    // Erro no email não deve afetar a aplicação — apenas registar
+    console.error('❌ Erro ao enviar email de reunião:', err.message)
   }
 }
 

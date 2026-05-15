@@ -23,7 +23,7 @@ const DIAS_SEMANA = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']
 
 // ← lembrete_antecedencia adicionado
 const FORM_VAZIO = {
-  titulo: '', cliente_id: '', cliente_nome: '', data_hora: '', tipo: 'diagnóstico',
+  titulo: '', cliente_nome_livre: '', data_hora: '', tipo: 'diagnóstico',
   notas: '', canal: '', responsavel_empresa: '',
   estado: 'agendado', formato: 'online', responsavel_trymedia: '',
   lembrete_antecedencia: ''
@@ -97,6 +97,7 @@ export default function Reunioes() {
       setForm({
         titulo: r.titulo || '',
         cliente_id: r.cliente_id || '',
+        cliente_nome_livre: r.cliente_nome_livre || r.cliente_nome || '',
         cliente_nome: r.cliente_nome || '',
         data_hora: r.data_hora ? r.data_hora.slice(0, 16) : '',
         tipo: r.tipo || 'diagnóstico',
@@ -378,15 +379,11 @@ export default function Reunioes() {
               <div className="form-row">
                 <div className="form-group">
                   <label>Cliente / Lead</label>
-                  <select
-                    value={form.cliente_id}
-                    onChange={e => setForm(f => ({ ...f, cliente_id: e.target.value }))}
-                  >
-                    <option value="">— Sem cliente associado —</option>
-                    {clientes.map(c => (
-                      <option key={c.id} value={c.id}>{c.nome_empresa}</option>
-                    ))}
-                  </select>
+                  <input
+                    value={form.cliente_nome_livre}
+                    onChange={e => setForm(f => ({ ...f, cliente_nome_livre: e.target.value }))}
+                    placeholder="Nome da empresa (opcional)"
+                  />
                 </div>
                 <div className="form-group">
                   <label>Responsável da Empresa</label>

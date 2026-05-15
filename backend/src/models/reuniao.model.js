@@ -6,7 +6,8 @@ const ReuniaoModel = {
 
   listar: async (filtros = {}) => {
     let sql = `
-      SELECT 
+      c.nome_empresa AS cliente_nome_bd,
+      COALESCE(c.nome_empresa, r.cliente_nome_livre) AS cliente_nome, 
         r.*,
         c.nome_empresa       AS cliente_nome,
         u.nome               AS criado_por_nome,
@@ -41,10 +42,10 @@ const ReuniaoModel = {
   criar: async (dados) => {
     const [result] = await db.query(
       `INSERT INTO reunioes 
-      (titulo, cliente_id, data_hora, tipo, notas, canal,
-       responsavel_empresa, estado, formato, responsavel_trymedia,
-       criado_por, lembrete_antecedencia)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+  (titulo, cliente_id, data_hora, tipo, notas, canal,
+   responsavel_empresa, estado, formato, responsavel_trymedia,
+   criado_por, lembrete_antecedencia, cliente_nome_livre)
+ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         dados.titulo,
         dados.cliente_id || null,
@@ -58,6 +59,7 @@ const ReuniaoModel = {
         dados.responsavel_trymedia || null,
         dados.criado_por,
         dados.lembrete_antecedencia || null,
+        dados.cliente_nome_livre || null,
       ]
     )
     return result.insertId
@@ -68,6 +70,7 @@ const ReuniaoModel = {
       `UPDATE reunioes SET
       titulo = ?,
       cliente_id = ?,
+      cliente_nome_livre = ?,
       data_hora = ?,
       tipo = ?,
       notas = ?,
@@ -91,6 +94,7 @@ const ReuniaoModel = {
         dados.formato,
         dados.responsavel_trymedia || null,
         dados.lembrete_antecedencia || null,
+        dados.cliente_nome_livre || null,
         id
       ]
     )

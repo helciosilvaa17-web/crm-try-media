@@ -50,6 +50,11 @@ export default function Sidebar() {
           )
         })}
       </ul>
+<<<<<<< Updated upstream
+=======
+<<<<<<< Updated upstream
+
+>>>>>>> Stashed changes
 
     </nav>
   )

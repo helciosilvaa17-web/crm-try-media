@@ -15,6 +15,7 @@ import Relatorios    from './pages/Relatorios'
 import Configuracoes from './pages/Configuracoes'
 import Perfil        from './pages/Perfil'
 import NotFound      from './pages/NotFound'
+import FichaReuniao from './pages/FichaReuniao'
 
 function PrivateRoute({ children }) {
   const { user, loading } = useAuth()
@@ -56,7 +57,7 @@ export default function App() {
               <Route path="perfil"       element={<Perfil />} />
               <Route path="relatorios"   element={<AdminRoute><Relatorios /></AdminRoute>} />
               <Route path="configuracoes" element={<AdminRoute><Configuracoes /></AdminRoute>} />
-            </Route>
+              <Route path="/reunioes/:id" element={<FichaReuniao />}/></Route>
 
             <Route path="*" element={<NotFound />} />
           </Routes>

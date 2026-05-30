@@ -127,7 +127,27 @@ const ReuniaoModel = {
       'DELETE FROM reunioes WHERE id = ?',
       [id]
     )
-  }
+  },
+
+  buscarPorId: async (id) => {
+
+  const [rows] = await db.query(`
+    SELECT
+      r.*,
+      c.nome_empresa AS cliente_nome,
+      u.nome AS criado_por_nome,
+      resp.nome AS responsavel_trymedia_nome
+    FROM reunioes r
+    LEFT JOIN clientes c ON c.id = r.cliente_id
+    LEFT JOIN utilizadores u ON u.id = r.criado_por
+    LEFT JOIN utilizadores resp ON resp.id = r.responsavel_trymedia
+    WHERE r.id = ?
+    LIMIT 1
+  `, [id])
+
+  return rows[0]
+}
+
 }
 
 module.exports = ReuniaoModel

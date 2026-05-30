@@ -120,7 +120,7 @@
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: #e94560;
+  background: var(--active-bg);
   color: #fff;
   font-size: 13px;
   font-weight: 700;
@@ -137,6 +137,7 @@
   opacity: 0;
   width: 0;
   transition: opacity 0.2s, width 0.2s;
+  margin-top: 4px;
 }
 
 .sidebar.expandido .sidebar-user-info {
@@ -145,7 +146,7 @@
 }
 
 .sidebar-user-nome {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   color: #fff;
   white-space: nowrap;
@@ -154,29 +155,30 @@
 }
 
 .sidebar-user-perfil {
-  font-size: 11px;
+  font-size: 10px;
   color: rgba(255, 255, 255, 0.5);
   text-transform: capitalize;
+  margin-top: 2px;
 }
 
 .sidebar-logout {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 2px;
   padding: 10px 12px;
   border: none;
   background: transparent;
   color: rgba(255, 255, 255, 0.5);
   border-radius: 8px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 12px;
   width: 100%;
   transition: background 0.2s, color 0.2s;
 }
 
 .sidebar-logout:hover {
   background: rgba(233, 69, 96, 0.15);
-  color: #e94560;
+  color: #bd1a35de;
 }
 
 .sidebar-logout i {

@@ -1,4 +1,3 @@
-// frontend/src/pages/FichaCliente.jsx
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { api } from '../services/api'
@@ -17,32 +16,24 @@ const TIPO_ICON = {
 }
 
 export default function FichaCliente() {
-  // useParams() lê o :id da URL — ex: /cliente/3 → id = "3"
   const { id } = useParams()
   const navigate = useNavigate()
 
-  const [cliente, setCliente] = useState(null)
-  const [interacoes, setInteracoes] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [erro, setErro] = useState(null)
-
-  const [novaInteracao, setNovaInteracao] = useState({ tipo: 'whatsapp', nota: '' })
-  const [adicionando, setAdicionando] = useState(false)
+  const [cliente, setCliente]                   = useState(null)
+  const [interacoes, setInteracoes]             = useState([])
+  const [loading, setLoading]                   = useState(true)
+  const [erro, setErro]                         = useState(null)
+  const [novaInteracao, setNovaInteracao]       = useState({ tipo: 'whatsapp', nota: '' })
+  const [adicionando, setAdicionando]           = useState(false)
   const [guardandoInteracao, setGuardandoInteracao] = useState(false)
+  const [editandoInteracao, setEditandoInteracao]   = useState(null)
 
-  const [editandoInteracao, setEditandoInteracao] = useState(null) // { id, tipo, nota }
-
-  // Carrega os dados do cliente quando o componente monta
-  // ou quando o id muda (navegação entre fichas)
   useEffect(() => {
     async function carregarCliente() {
       try {
         setLoading(true)
         setErro(null)
-
-        // GET /api/clientes/:id — devolve { ...cliente, interacoes: [...] }
         const dados = await api.get(`/clientes/${id}`)
-
         setCliente(dados)
         setInteracoes(dados.interacoes || [])
       } catch (err) {
@@ -51,24 +42,17 @@ export default function FichaCliente() {
         setLoading(false)
       }
     }
-
     carregarCliente()
-  }, [id])  // id nas dependências — se mudar o cliente na URL, recarrega
+  }, [id])
 
   const handleAdicionarInteracao = async (e) => {
     e.preventDefault()
     if (!novaInteracao.nota.trim()) return
-
     setGuardandoInteracao(true)
     try {
-      // POST /api/clientes/:id/interacoes
       await api.post(`/clientes/${id}/interacoes`, novaInteracao)
-
-      // Após criar, vamos buscar a ficha completa de novo
-      // para termos a interacção com a data real do servidor
       const dados = await api.get(`/clientes/${id}`)
       setInteracoes(dados.interacoes || [])
-
       setNovaInteracao({ tipo: 'whatsapp', nota: '' })
       setAdicionando(false)
     } catch (err) {
@@ -76,32 +60,31 @@ export default function FichaCliente() {
     } finally {
       setGuardandoInteracao(false)
     }
+  }
 
-    const handleEditarInteracao = async (e) => {
-      e.preventDefault()
-      try {
-        await api.put(`/clientes/${id}/interacoes/${editandoInteracao.id}`, {
-          tipo: editandoInteracao.tipo,
-          nota: editandoInteracao.nota
-        })
-        const dados = await api.get(`/clientes/${id}`)
-        setInteracoes(dados.interacoes || [])
-        setEditandoInteracao(null)
-      } catch (err) {
-        alert('Erro: ' + err.message)
-      }
+  const handleEditarInteracao = async (e) => {
+    e.preventDefault()
+    try {
+      await api.put(`/clientes/${id}/interacoes/${editandoInteracao.id}`, {
+        tipo: editandoInteracao.tipo,
+        nota: editandoInteracao.nota
+      })
+      const dados = await api.get(`/clientes/${id}`)
+      setInteracoes(dados.interacoes || [])
+      setEditandoInteracao(null)
+    } catch (err) {
+      alert('Erro ao editar: ' + err.message)
     }
+  }
 
-    const handleApagarInteracao = async (interacaoId) => {
-      if (!window.confirm('Remover esta interacção?')) return
-      try {
-        await api.delete(`/clientes/${id}/interacoes/${interacaoId}`)
-        setInteracoes(prev => prev.filter(i => i.id !== interacaoId))
-      } catch (err) {
-        alert('Erro: ' + err.message)
-      }
+  const handleApagarInteracao = async (interacaoId) => {
+    if (!window.confirm('Remover esta interacção?')) return
+    try {
+      await api.delete(`/clientes/${id}/interacoes/${interacaoId}`)
+      setInteracoes(prev => prev.filter(i => i.id !== interacaoId))
+    } catch (err) {
+      alert('Erro ao remover: ' + err.message)
     }
-
   }
 
   const formatKz = (v) => Number(v || 0).toLocaleString('pt-AO') + ' Kz'
@@ -131,7 +114,7 @@ export default function FichaCliente() {
 
       <div className="ficha-breadcrumb">
         <button onClick={() => navigate('/pipeline')} className="btn-voltar">
-          <i className="bi bi-arrow-left"></i> Pipeline
+          <i className="bi bi-arrow-left"></i> Leads
         </button>
         <span className="breadcrumb-sep">/</span>
         <span>{cliente.nome_empresa}</span>
@@ -251,18 +234,10 @@ export default function FichaCliente() {
                   required
                 />
                 <div className="form-interacao-acoes">
-                  <button
-                    type="button"
-                    className="btn-cancelar-modal"
-                    onClick={() => setAdicionando(false)}
-                  >
+                  <button type="button" className="btn-cancelar-modal" onClick={() => setAdicionando(false)}>
                     Cancelar
                   </button>
-                  <button
-                    type="submit"
-                    className="btn-guardar-modal"
-                    disabled={guardandoInteracao}
-                  >
+                  <button type="submit" className="btn-guardar-modal" disabled={guardandoInteracao}>
                     {guardandoInteracao ? 'A guardar...' : 'Guardar'}
                   </button>
                 </div>
@@ -275,18 +250,22 @@ export default function FichaCliente() {
                   Sem interacções registadas.
                 </p>
               )}
+
               {interacoes.map(inter => (
                 <div key={inter.id} className="interacao-item">
                   <div className="interacao-icon">
                     <i className={`bi ${TIPO_ICON[inter.tipo] || 'bi-chat-fill'}`}></i>
                   </div>
                   <div className="interacao-corpo" style={{ flex: 1 }}>
+
                     {editandoInteracao?.id === inter.id ? (
                       <form onSubmit={handleEditarInteracao}>
                         <select
                           value={editandoInteracao.tipo}
                           onChange={e => setEditandoInteracao(ei => ({ ...ei, tipo: e.target.value }))}
-                          style={{ marginBottom: 8, width: '100%' }}
+                          style={{ marginBottom: 8, width: '100%', padding: '6px 10px',
+                            borderRadius: 6, border: '1px solid var(--border)',
+                            background: 'var(--card)', color: 'var(--text)' }}
                         >
                           <option value="whatsapp">WhatsApp</option>
                           <option value="ligação">Ligação</option>
@@ -297,13 +276,17 @@ export default function FichaCliente() {
                           rows={2}
                           value={editandoInteracao.nota}
                           onChange={e => setEditandoInteracao(ei => ({ ...ei, nota: e.target.value }))}
-                          style={{ width: '100%', marginBottom: 8 }}
+                          style={{ width: '100%', marginBottom: 8, padding: '6px 10px',
+                            borderRadius: 6, border: '1px solid var(--border)',
+                            background: 'var(--card)', color: 'var(--text)', resize: 'vertical' }}
                         />
                         <div style={{ display: 'flex', gap: 8 }}>
-                          <button type="submit" className="btn-guardar-modal" style={{ fontSize: 12, padding: '4px 12px' }}>
+                          <button type="submit" className="btn-guardar-modal"
+                            style={{ fontSize: 12, padding: '5px 14px' }}>
                             Guardar
                           </button>
-                          <button type="button" className="btn-cancelar-modal" style={{ fontSize: 12, padding: '4px 12px' }}
+                          <button type="button" className="btn-cancelar-modal"
+                            style={{ fontSize: 12, padding: '5px 14px' }}
                             onClick={() => setEditandoInteracao(null)}>
                             Cancelar
                           </button>
@@ -314,23 +297,31 @@ export default function FichaCliente() {
                         <div className="interacao-meta">
                           <span className="interacao-tipo">{inter.tipo}</span>
                           <span className="interacao-data">
-                            {new Date(inter.data).toLocaleDateString('pt-AO')} · {new Date(inter.data).toLocaleTimeString('pt-AO', { hour: '2-digit', minute: '2-digit' })}
+                            {new Date(inter.data).toLocaleDateString('pt-AO')}
+                            {' · '}
+                            {new Date(inter.data).toLocaleTimeString('pt-AO', { hour: '2-digit', minute: '2-digit' })}
                           </span>
                         </div>
                         <p className="interacao-nota">{inter.nota}</p>
                         {inter.utilizador_nome && (
-                          <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>— {inter.utilizador_nome}</span>
+                          <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                            — {inter.utilizador_nome}
+                          </span>
                         )}
-                        <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
+                        <div style={{ display: 'flex', gap: 12, marginTop: 8 }}>
                           <button
                             onClick={() => setEditandoInteracao({ id: inter.id, tipo: inter.tipo, nota: inter.nota })}
-                            style={{ background: 'none', border: 'none', color: 'var(--accent)', cursor: 'pointer', fontSize: 12 }}
+                            style={{ background: 'none', border: 'none',
+                              color: 'var(--accent)', cursor: 'pointer', fontSize: 12,
+                              display: 'flex', alignItems: 'center', gap: 4 }}
                           >
                             <i className="bi bi-pencil-square"></i> Editar
                           </button>
                           <button
                             onClick={() => handleApagarInteracao(inter.id)}
-                            style={{ background: 'none', border: 'none', color: '#e74c3c', cursor: 'pointer', fontSize: 12 }}
+                            style={{ background: 'none', border: 'none',
+                              color: '#e74c3c', cursor: 'pointer', fontSize: 12,
+                              display: 'flex', alignItems: 'center', gap: 4 }}
                           >
                             <i className="bi bi-trash"></i> Remover
                           </button>

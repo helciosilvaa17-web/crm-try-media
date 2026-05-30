@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { api } from '../services/api'
 import './Reunioes.css'
+import { useNavigate } from 'react-router-dom'
 
 const TIPOS = ['diagnóstico', 'follow-up', 'proposta', 'reunião interna', 'outro']
 const FORMATOS = ['online', 'presencial']
@@ -54,6 +55,7 @@ function getLabelEstado(valor) {
 }
 
 export default function Reunioes() {
+  const navigate = useNavigate()
   const [vista, setVista] = useState('lista')
   const [reunioes, setReunioes] = useState([])
   const [utilizadores, setUtilizadores] = useState([])
@@ -233,7 +235,16 @@ export default function Reunioes() {
                 .sort((a, b) => new Date(a.data_hora) - new Date(b.data_hora))
                 .map(r => (
                   <tr key={r.id}>
-                    <td style={{ fontWeight: 600 }}>{r.titulo}</td>
+                    <td
+                      style={{
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        color: 'var(--accent)'
+                      }}
+                      onClick={() => navigate(`/reunioes/${r.id}`)}
+                    >
+                      {r.titulo}
+                    </td>
                     <td>{r.cliente_nome || r.cliente || '—'}</td>
                     <td>
                       <span className="reuniao-data-badge">
@@ -334,7 +345,7 @@ export default function Reunioes() {
                   <div
                     key={r.id}
                     className="cal-reuniao-item"
-                    onClick={() => abrirModal(r)}
+                    onClick={() => navigate(`/reunioes/${r.id}`)}
                     style={{ cursor: 'pointer' }}
                   >
                     <span className="cal-reuniao-data">{formatDataHora(r.data_hora)}</span>

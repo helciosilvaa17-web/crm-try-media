@@ -1,8 +1,8 @@
 // backend/src/controllers/reunioes.controller.js
 
-const ReuniaoModel    = require('../models/reuniao.model')
+const ReuniaoModel = require('../models/reuniao.model')
 const UtilizadorModel = require('../models/utilizador.model')
-const db              = require('../config/db')
+const db = require('../config/db')
 const { enviarEmailNovaReuniao } = require('../services/email.service')
 
 const ReunioesController = {
@@ -10,8 +10,8 @@ const ReunioesController = {
   listar: async (req, res) => {
     try {
       const filtros = {
-        mes:    req.query.mes,
-        ano:    req.query.ano,
+        mes: req.query.mes,
+        ano: req.query.ano,
         estado: req.query.estado
       }
       if (req.utilizador.perfil === 'vendedor') {
@@ -51,14 +51,14 @@ const ReunioesController = {
   },
 
   atualizar: async (req, res) => {
-  try {
-    await ReuniaoModel.atualizar(req.params.id, req.body)
-    res.json({ mensagem: 'Reunião actualizada.' })
-  } catch (err) {
-    console.error('Erro ao actualizar reunião:', err)
-    res.status(500).json({ mensagem: 'Erro interno.' })
-  }
-},
+    try {
+      await ReuniaoModel.atualizar(req.params.id, req.body)
+      res.json({ mensagem: 'Reunião actualizada.' })
+    } catch (err) {
+      console.error('Erro ao actualizar reunião:', err)
+      res.status(500).json({ mensagem: 'Erro interno.' })
+    }
+  },
 
   apagar: async (req, res) => {
     try {
@@ -79,7 +79,28 @@ const ReunioesController = {
     } catch (err) {
       res.status(500).json({ mensagem: 'Erro interno.' })
     }
+  },
+
+  buscarPorId: async (req, res) => {
+    try {
+      const reuniao = await ReuniaoModel.buscarPorId(req.params.id)
+
+      if (!reuniao) {
+        return res.status(404).json({
+          mensagem: 'Reunião não encontrada.'
+        })
+      }
+
+      res.json(reuniao)
+
+    } catch (err) {
+      console.error(err)
+      res.status(500).json({
+        mensagem: 'Erro interno.'
+      })
+    }
   }
+
 }
 
 // ─── Função auxiliar: enviar email em background ─────────────────────────────

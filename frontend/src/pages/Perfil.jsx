@@ -91,7 +91,7 @@ export default function Perfil() {
             <div>
               <h1 style={{ fontSize: 26, fontWeight: 700, marginBottom: 6 }}>{user?.nome}</h1>
               <span className={`perfil-badge ${user?.perfil}`}>
-                {user?.perfil === 'administrador' ? '👑 Administrador' : '💼 Vendedor'}
+                {user?.perfil === 'administrador' ? 'Administrador' : 'Vendedor'}
               </span>
               <div style={{ color: 'var(--text-muted)', fontSize: 14, marginTop: 8 }}>{user?.email}</div>
               <div style={{ color: 'var(--text-muted)', fontSize: 13, marginTop: 4 }}>

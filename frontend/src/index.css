@@ -55,6 +55,8 @@
   --radius-sm:        12px;
   --radius-xs:        8px;
   --radius-pill:      40px;
+
+  --card: rgb(12, 30, 18);
 }
 
 /* ================================

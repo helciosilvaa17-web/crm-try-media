@@ -8,11 +8,12 @@ const { autenticar } = require('../middlewares/auth')
 router.use(autenticar)
 
 router.get('/',                 ReunioesController.listar)
+router.get('/utilizadores',     ReunioesController.listarUtilizadores)
+router.get('/:id',              ReunioesController.buscarPorId)
+
 router.post('/',                ReunioesController.criar)
 router.put('/:id',              ReunioesController.atualizar)
 router.delete('/:id',           ReunioesController.apagar)
 
-// Rota nova — lista utilizadores para o formulário de reunião
-router.get('/utilizadores',     ReunioesController.listarUtilizadores)
 
 module.exports = router

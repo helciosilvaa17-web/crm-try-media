@@ -50,7 +50,35 @@ const ClientesController = {
       await ClienteModel.criarInteracao(req.params.id, tipo, nota, req.utilizador.id)
       res.status(201).json({ mensagem: 'Interacção registada.' })
     } catch (err) { res.status(500).json({ mensagem: 'Erro interno.' }) }
+  },
+
+  editarInteracao: async (req, res) => {
+  try {
+    const { tipo, nota } = req.body
+    await db.query(
+      'UPDATE interacoes SET tipo = ?, nota = ? WHERE id = ? AND cliente_id = ?',
+      [tipo, nota, req.params.id, req.params.clienteId]
+    )
+    res.json({ mensagem: 'Interacção actualizada.' })
+  } catch (err) {
+    console.error('Erro ao editar interacção:', err)
+    res.status(500).json({ mensagem: 'Erro interno.' })
   }
+},
+
+apagarInteracao: async (req, res) => {
+  try {
+    await db.query(
+      'DELETE FROM interacoes WHERE id = ? AND cliente_id = ?',
+      [req.params.id, req.params.clienteId]
+    )
+    res.json({ mensagem: 'Interacção removida.' })
+  } catch (err) {
+    console.error('Erro ao apagar interacção:', err)
+    res.status(500).json({ mensagem: 'Erro interno.' })
+  }
+},
+
 }
 
 module.exports = ClientesController

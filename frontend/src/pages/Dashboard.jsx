@@ -206,7 +206,7 @@ export default function Dashboard() {
             </div>
             <div className="meta-separador">/</div>
             <div className="meta-item">
-              <span className="meta-num muted">{formatKz(dados.meta.total)}</span>
+              <span className="meta-num">{formatKz(dados.meta.total)}</span>
               <span className="meta-desc">Meta</span>
             </div>
           </div>

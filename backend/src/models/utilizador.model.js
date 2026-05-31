@@ -6,6 +6,17 @@ const UtilizadorModel = {
         return rows [0]
     },
 
+     // Adiciona este método dentro do objeto UtilizadorModel,
+// a seguir ao método "encontrarPorEmail"
+
+        buscarPorId: async (id) => {
+        const [rows] = await db.query(
+            'SELECT id, nome, email, perfil FROM utilizadores WHERE id = ?',
+            [id]
+        )
+        return rows[0]
+        },   
+
     criar: async (nome, email, hash, perfil) => {
         await db.query('INSERT INTO utilizadores (nome, email, palavra_passe, perfil) VALUES (?, ?, ?, ?)', [nome, email, hash, perfil])
     },

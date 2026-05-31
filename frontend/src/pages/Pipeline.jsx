@@ -94,8 +94,8 @@ export default function Pipeline() {
         telefone:        cliente.telefone || '',
         email:           cliente.email || '',
         whatsapp:        cliente.whatsapp || '',
-        ultimo_contacto: cliente.ultimo_contacto.split('T')[0] || '',
-        fecho_previsto:  cliente.fecho_previsto?.split('T')[0] || '',
+        ultimo_contacto: cliente.ultimo_contacto?.slice(0, 10) || '',
+        fecho_previsto:  cliente.fecho_previsto?.slice(0, 10) || '',
         observacoes:     cliente.observacoes || '',
         link_info:       cliente.link_info || '',
       })
@@ -186,7 +186,7 @@ export default function Pipeline() {
     <div className="pipeline-page">
 
       <div className="pipeline-header">
-        <h1>Pipeline de Clientes</h1>
+        <h1>Pipeline</h1>
         <div className="pipeline-header-actions">
           <select 
             className="filtro-status"
@@ -199,7 +199,7 @@ export default function Pipeline() {
             ))}
           </select>
           <button className="btn-novo" onClick={() => abrirModal()}>
-            + Novo Cliente
+            + Novo Lead
           </button>
         </div>
       </div>

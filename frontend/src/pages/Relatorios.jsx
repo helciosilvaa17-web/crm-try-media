@@ -17,7 +17,7 @@ function gerarOpcoesMeses() {
 }
 
 const OPCOES_MESES = gerarOpcoesMeses()
-const OPCAO_TODOS  = { label: 'Todos os dados', mes: null, ano: null }
+const OPCAO_TODOS = { label: 'Todos os dados', mes: null, ano: null }
 
 const LABELS_FASE = {
   novo: 'Novo', contacto: 'Contacto Inicial', qualificado: 'Qualificado',
@@ -39,12 +39,12 @@ function BarraProgresso({ valor, total, cor = 'var(--accent)' }) {
 }
 
 export default function Relatorios() {
-  const [mesSelecionado, setMesSelecionado]     = useState(OPCAO_TODOS)
+  const [mesSelecionado, setMesSelecionado] = useState(OPCAO_TODOS)
   const [vendedorSelecionado, setVendedorSelecionado] = useState(null)
-  const [dadosGlobais, setDadosGlobais]         = useState(null)
-  const [dadosVendedor, setDadosVendedor]       = useState(null)
-  const [loading, setLoading]                   = useState(true)
-  const [erro, setErro]                         = useState(null)
+  const [dadosGlobais, setDadosGlobais] = useState(null)
+  const [dadosVendedor, setDadosVendedor] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [erro, setErro] = useState(null)
 
   useEffect(() => {
     async function carregar() {
@@ -149,7 +149,7 @@ export default function Relatorios() {
             </div>
             <div className="rel-kpi">
               <span className="rel-kpi-label">Meta Mensal</span>
-              <span className="rel-kpi-valor muted">{fmt(dadosGlobais.meta)}</span>
+              <span className="rel-kpi-valor">{fmt(dadosGlobais.meta)}</span>
             </div>
             <div className="rel-kpi">
               <span className="rel-kpi-label">% da Meta</span>
@@ -237,25 +237,60 @@ export default function Relatorios() {
                 ))}
               </div>
 
-              {dadosGlobais.taxasEsperadas && (
+              {dadosGlobais.taxasEsperadas && dadosGlobais.taxasReais && (
                 <div className="rel-card">
                   <h2 className="rel-card-titulo">
-                    <i className="bi bi-graph-up-arrow"></i> Taxas Esperadas
+                    <i className="bi bi-graph-up-arrow"></i> Taxas de Conversão
                   </h2>
                   {[
-                    { label: 'Conexão',     val: dadosGlobais.taxasEsperadas.taxa_conexao },
-                    { label: 'Agendamento', val: dadosGlobais.taxasEsperadas.taxa_agendamento },
-                    { label: 'Realização',  val: dadosGlobais.taxasEsperadas.taxa_realizacao },
-                    { label: 'Fechamento',  val: dadosGlobais.taxasEsperadas.taxa_fechamento },
-                  ].map(t => (
-                    <div key={t.label} style={{ marginBottom: 12 }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                        <span style={{ fontSize: 13 }}>{t.label}</span>
-                        <span style={{ fontSize: 13, fontWeight: 700 }}>{t.val}%</span>
+                    {
+                      label: 'Conexão',
+                      esperada: dadosGlobais.taxasEsperadas.taxa_conexao,
+                      real: dadosGlobais.taxasReais.taxa_conexao
+                    },
+                    {
+                      label: 'Agendamento',
+                      esperada: dadosGlobais.taxasEsperadas.taxa_agendamento,
+                      real: dadosGlobais.taxasReais.taxa_agendamento
+                    },
+                    {
+                      label: 'Realização',
+                      esperada: dadosGlobais.taxasEsperadas.taxa_realizacao,
+                      real: dadosGlobais.taxasReais.taxa_realizacao
+                    },
+                    {
+                      label: 'Fechamento',
+                      esperada: dadosGlobais.taxasEsperadas.taxa_fechamento,
+                      real: dadosGlobais.taxasReais.taxa_fechamento
+                    },
+                  ].map(t => {
+                    // Verde se atingiu ou superou o esperado, laranja se está perto, vermelho se longe
+                    const cor = t.real >= t.esperada
+                      ? '#27ae60'
+                      : t.real >= t.esperada * 0.7
+                        ? '#f39c12'
+                        : '#e74c3c'
+
+                    return (
+                      <div key={t.label} style={{ marginBottom: 16 }}>
+                        {/* Linha de título com os dois valores */}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                          <span style={{ fontSize: 13, fontWeight: 600 }}>{t.label}</span>
+                          <div style={{ display: 'flex', gap: 12, fontSize: 12 }}>
+                            <span style={{ color: 'var(--text-muted)' }}>
+                              Meta: <strong style={{ color: 'var(--text)' }}>{t.esperada}%</strong>
+                            </span>
+                            <span style={{ color: cor, fontWeight: 700 }}>
+                              Real: {t.real}%
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Barra que representa a taxa REAL, com cor dinâmica */}
+                        <BarraProgresso valor={t.real} total={100} cor={cor} />
                       </div>
-                      <BarraProgresso valor={t.val} total={100} cor="#9b59b6" />
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               )}
             </div>

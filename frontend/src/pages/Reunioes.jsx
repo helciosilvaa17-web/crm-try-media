@@ -1,29 +1,33 @@
 import { useState, useEffect } from 'react'
 import { api } from '../services/api'
 import './Reunioes.css'
+import { useNavigate } from 'react-router-dom'
 
 const TIPOS = ['diagnóstico', 'follow-up', 'proposta', 'reunião interna', 'outro']
 const FORMATOS = ['online', 'presencial']
 
+
 const ESTADOS = [
-  { valor: 'agendado',           label: 'Agendado',           cor: '#3498db' },
-  { valor: 'por confirmacao',    label: 'Por Confirmação',    cor: '#f39c12' },
+  { valor: 'agendado', label: 'Agendado', cor: '#3498db' },
+  { valor: 'por confirmacao', label: 'Por Confirmação', cor: '#f39c12' },
   { valor: 'sem comparecimento', label: 'Sem Comparecimento', cor: '#e67e22' },
-  { valor: 'remarcado',          label: 'Remarcado',          cor: '#9b59b6' },
-  { valor: 'cancelado',          label: 'Cancelado',          cor: '#e74c3c' },
-  { valor: 'realizada',          label: 'Realizada',          cor: '#27ae60' },
+  { valor: 'remarcado', label: 'Remarcado', cor: '#9b59b6' },
+  { valor: 'cancelado', label: 'Cancelado', cor: '#e74c3c' },
+  { valor: 'realizada', label: 'Realizada', cor: '#27ae60' },
 ]
 
 const MESES = [
-  'Janeiro','Fevereiro','Março','Abril','Maio','Junho',
-  'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'
+  'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+  'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
 ]
-const DIAS_SEMANA = ['Seg','Ter','Qua','Qui','Sex','Sáb','Dom']
+const DIAS_SEMANA = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom']
 
+// ← lembrete_antecedencia adicionado
 const FORM_VAZIO = {
-  titulo: '', cliente: '', data_hora: '', tipo: 'diagnóstico',
+  titulo: '', cliente_nome_livre: '', data_hora: '', tipo: 'diagnóstico',
   notas: '', canal: '', responsavel_empresa: '',
-  estado: 'agendado', formato: 'online', responsavel_trymedia: ''
+  estado: 'agendado', formato: 'online', responsavel_trymedia: '',
+  lembrete_antecedencia: ''
 }
 
 function formatDataHora(str) {
@@ -34,7 +38,7 @@ function formatDataHora(str) {
 
 function diasDoMes(ano, mes) {
   const primeiro = new Date(ano, mes, 1)
-  const ultimo   = new Date(ano, mes + 1, 0)
+  const ultimo = new Date(ano, mes + 1, 0)
   const inicioSemana = (primeiro.getDay() + 6) % 7
   const dias = []
   for (let i = 0; i < inicioSemana; i++) dias.push(null)
@@ -51,32 +55,36 @@ function getLabelEstado(valor) {
 }
 
 export default function Reunioes() {
-  const [vista, setVista]           = useState('lista')
-  const [reunioes, setReunioes]     = useState([])
+  const navigate = useNavigate()
+  const [vista, setVista] = useState('lista')
+  const [reunioes, setReunioes] = useState([])
   const [utilizadores, setUtilizadores] = useState([])
-  const [loading, setLoading]       = useState(true)
-  const [erro, setErro]             = useState(null)
+  const [clientes, setClientes] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [erro, setErro] = useState(null)
   const [modalAberto, setModalAberto] = useState(false)
-  const [form, setForm]             = useState(FORM_VAZIO)
+  const [form, setForm] = useState(FORM_VAZIO)
   const [editandoId, setEditandoId] = useState(null)
-  const [guardando, setGuardando]   = useState(false)
-  const [confirmarId, setConfirmarId] = useState(null)  // ← dentro do componente
+  const [guardando, setGuardando] = useState(false)
+  const [confirmarId, setConfirmarId] = useState(null)
 
   const hoje = new Date()
-  const [calMes, setCalMes]               = useState(hoje.getMonth())
-  const [calAno, setCalAno]               = useState(hoje.getFullYear())
+  const [calMes, setCalMes] = useState(hoje.getMonth())
+  const [calAno, setCalAno] = useState(hoje.getFullYear())
   const [diaSelecionado, setDiaSelecionado] = useState(hoje.getDate())
 
   useEffect(() => {
     async function carregar() {
       try {
         setLoading(true)
-        const [dadosReunioes, dadosUtilizadores] = await Promise.all([
+        const [dadosReunioes, dadosUtilizadores, dadosClientes] = await Promise.all([
           api.get('/reunioes'),
-          api.get('/reunioes/utilizadores')
+          api.get('/reunioes/utilizadores'),
+          api.get('/clientes')
         ])
         setReunioes(dadosReunioes)
         setUtilizadores(dadosUtilizadores)
+        setClientes(dadosClientes)
       } catch (err) {
         setErro(err.message)
       } finally {
@@ -89,16 +97,19 @@ export default function Reunioes() {
   const abrirModal = (r = null) => {
     if (r) {
       setForm({
-        titulo:               r.titulo || '',
-        cliente:              r.cliente_nome || '',
-        data_hora:            r.data_hora ? r.data_hora.slice(0, 16) : '',
-        tipo:                 r.tipo || 'diagnóstico',
-        notas:                r.notas || '',
-        canal:                r.canal || '',
-        responsavel_empresa:  r.responsavel_empresa || '',
-        estado:               r.estado || 'agendado',
-        formato:              r.formato || 'online',
+        titulo: r.titulo || '',
+        cliente_id: r.cliente_id || '',
+        cliente_nome_livre: r.cliente_nome_livre || r.cliente_nome || '',
+        cliente_nome: r.cliente_nome || '',
+        data_hora: r.data_hora ? r.data_hora.slice(0, 16) : '',
+        tipo: r.tipo || 'diagnóstico',
+        notas: r.notas || '',
+        canal: r.canal || '',
+        responsavel_empresa: r.responsavel_empresa || '',
+        estado: r.estado || 'agendado',
+        formato: r.formato || 'online',
         responsavel_trymedia: r.responsavel_trymedia || '',
+        lembrete_antecedencia: r.lembrete_antecedencia || '', // ← mapeado ao editar
       })
       setEditandoId(r.id)
     } else {
@@ -224,7 +235,16 @@ export default function Reunioes() {
                 .sort((a, b) => new Date(a.data_hora) - new Date(b.data_hora))
                 .map(r => (
                   <tr key={r.id}>
-                    <td style={{ fontWeight: 600 }}>{r.titulo}</td>
+                    <td
+                      style={{
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                        color: 'var(--accent)'
+                      }}
+                      onClick={() => navigate(`/reunioes/${r.id}`)}
+                    >
+                      {r.titulo}
+                    </td>
                     <td>{r.cliente_nome || r.cliente || '—'}</td>
                     <td>
                       <span className="reuniao-data-badge">
@@ -294,7 +314,7 @@ export default function Reunioes() {
               <div key={d} className="cal-dia-semana">{d}</div>
             ))}
             {dias.map((dia, i) => {
-              const ehHoje    = dia === hoje.getDate() && calMes === hoje.getMonth() && calAno === hoje.getFullYear()
+              const ehHoje = dia === hoje.getDate() && calMes === hoje.getMonth() && calAno === hoje.getFullYear()
               const temReuniao = dia && diasComReunioes.has(dia)
               const selecionado = dia === diaSelecionado
               return (
@@ -325,7 +345,7 @@ export default function Reunioes() {
                   <div
                     key={r.id}
                     className="cal-reuniao-item"
-                    onClick={() => abrirModal(r)}
+                    onClick={() => navigate(`/reunioes/${r.id}`)}
                     style={{ cursor: 'pointer' }}
                   >
                     <span className="cal-reuniao-data">{formatDataHora(r.data_hora)}</span>
@@ -369,10 +389,12 @@ export default function Reunioes() {
 
               <div className="form-row">
                 <div className="form-group">
-                  <label>Cliente</label>
-                  <input value={form.cliente}
-                    onChange={e => setForm(f => ({ ...f, cliente: e.target.value }))}
-                    placeholder="Nome da empresa" />
+                  <label>Cliente / Lead</label>
+                  <input
+                    value={form.cliente_nome_livre}
+                    onChange={e => setForm(f => ({ ...f, cliente_nome_livre: e.target.value }))}
+                    placeholder="Nome da empresa (opcional)"
+                  />
                 </div>
                 <div className="form-group">
                   <label>Responsável da Empresa</label>
@@ -433,6 +455,35 @@ export default function Reunioes() {
                   <input value={form.canal}
                     onChange={e => setForm(f => ({ ...f, canal: e.target.value }))}
                     placeholder="Link do Instagram, Google Maps, etc." />
+                </div>
+              </div>
+
+              {/* ── Lembrete — campo novo ───────────────────────── */}
+              <div className="form-row">
+                <div className="form-group">
+                  <label>
+                    <i className="bi bi-bell-fill" style={{ marginRight: 6, color: 'var(--accent)' }}></i>
+                    Lembrete por e-mail
+                  </label>
+                  <select
+                    value={form.lembrete_antecedencia}
+                    onChange={e => setForm(f => ({ ...f, lembrete_antecedencia: e.target.value }))}
+                  >
+                    <option value="">Sem lembrete</option>
+                    <option value="15">15 minutos antes</option>
+                    <option value="30">30 minutos antes</option>
+                    <option value="60">1 hora antes</option>
+                    <option value="120">2 horas antes</option>
+                    <option value="1440">1 dia antes</option>
+                  </select>
+                </div>
+                <div className="form-group" style={{ justifyContent: 'flex-end', paddingTop: 28 }}>
+                  {form.lembrete_antecedencia && (
+                    <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: 0 }}>
+                      <i className="bi bi-info-circle" style={{ marginRight: 6 }}></i>
+                      O criador e o responsável TRY MEDIA receberão o lembrete por e-mail.
+                    </p>
+                  )}
                 </div>
               </div>
 

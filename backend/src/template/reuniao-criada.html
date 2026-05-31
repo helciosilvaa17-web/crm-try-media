@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Nova Reunião Agendada</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: #f4f6f9; color: #333; }
+    .wrapper { max-width: 600px; margin: 40px auto; background: #fff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+    .header { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%); padding: 40px 30px; text-align: center; }
+    .header img { height: 48px; margin-bottom: 16px; }
+    .header h1 { color: #fff; font-size: 22px; font-weight: 700; letter-spacing: 0.5px; }
+    .header p { color: rgba(255,255,255,0.7); font-size: 13px; margin-top: 6px; }
+    .badge { display: inline-block; background: #e94560; color: #fff; font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 20px; text-transform: uppercase; letter-spacing: 1px; margin-top: 14px; }
+    .body { padding: 36px 30px; }
+    .greeting { font-size: 16px; color: #444; margin-bottom: 20px; }
+    .greeting strong { color: #1a1a2e; }
+    .card { background: #f8f9fc; border: 1px solid #e8ecf0; border-radius: 10px; padding: 24px; margin: 24px 0; }
+    .card h2 { font-size: 18px; color: #1a1a2e; margin-bottom: 18px; display: flex; align-items: center; gap: 8px; }
+    .field { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; border-bottom: 1px solid #eef0f4; }
+    .field:last-child { border-bottom: none; }
+    .field-icon { font-size: 18px; flex-shrink: 0; margin-top: 1px; }
+    .field-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: #888; margin-bottom: 2px; }
+    .field-value { font-size: 15px; color: #222; font-weight: 500; }
+    .estado-badge { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; text-transform: capitalize; background: #e8f5e9; color: #2e7d32; }
+    .notas-box { background: #fff8e1; border-left: 4px solid #ffc107; padding: 14px 16px; border-radius: 0 8px 8px 0; margin-top: 20px; }
+    .notas-box p { font-size: 13px; color: #5d4037; line-height: 1.6; }
+    .cta { text-align: center; margin: 32px 0 20px; }
+    .cta a { display: inline-block; background: #e94560; color: #fff; font-weight: 700; font-size: 15px; padding: 14px 36px; border-radius: 8px; text-decoration: none; letter-spacing: 0.3px; }
+    .footer { background: #f8f9fc; border-top: 1px solid #eef0f4; padding: 24px 30px; text-align: center; }
+    .footer p { font-size: 12px; color: #999; line-height: 1.8; }
+    .footer a { color: #e94560; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="header">
+      <h1>📅 Nova Reunião Agendada</h1>
+      <p>Sistema CRM — TRY MEDIA</p>
+      <span class="badge">Notificação Automática</span>
+    </div>
+
+    <div class="body">
+      <p class="greeting">Olá, <strong>{{NOME_VENDEDOR}}</strong>! 👋</p>
+      <p style="color:#555; font-size:14px; line-height:1.7;">
+        Foi agendada uma nova reunião onde és o responsável. Consulta os detalhes abaixo e prepara-te com antecedência.
+      </p>
+
+      <div class="card">
+        <h2>📋 Detalhes da Reunião</h2>
+
+        <div class="field">
+          <span class="field-icon">📌</span>
+          <div>
+            <div class="field-label">Título</div>
+            <div class="field-value">{{TITULO}}</div>
+          </div>
+        </div>
+
+        <div class="field">
+          <span class="field-icon">🗓️</span>
+          <div>
+            <div class="field-label">Data e Hora</div>
+            <div class="field-value">{{DATA_HORA}}</div>
+          </div>
+        </div>
+
+        <div class="field">
+          <span class="field-icon">🏢</span>
+          <div>
+            <div class="field-label">Cliente</div>
+            <div class="field-value">{{CLIENTE}}</div>
+          </div>
+        </div>
+
+        <div class="field">
+          <span class="field-icon">🎯</span>
+          <div>
+            <div class="field-label">Tipo de Reunião</div>
+            <div class="field-value">{{TIPO}}</div>
+          </div>
+        </div>
+
+        <div class="field">
+          <span class="field-icon">💻</span>
+          <div>
+            <div class="field-label">Formato</div>
+            <div class="field-value">{{FORMATO}}</div>
+          </div>
+        </div>
+
+        <div class="field">
+          <span class="field-icon">📡</span>
+          <div>
+            <div class="field-label">Canal</div>
+            <div class="field-value">{{CANAL}}</div>
+          </div>
+        </div>
+
+        <div class="field">
+          <span class="field-icon">🟢</span>
+          <div>
+            <div class="field-label">Estado</div>
+            <div class="field-value"><span class="estado-badge">{{ESTADO}}</span></div>
+          </div>
+        </div>
+      </div>
+
+      {{#if NOTAS}}
+      <div class="notas-box">
+        <p><strong>📝 Notas:</strong> {{NOTAS}}</p>
+      </div>
+      {{/if}}
+
+      <div class="cta">
+        <a href="http://localhost:5173/reunioes">Ver no CRM →</a>
+      </div>
+    </div>
+
+    <div class="footer">
+      <p>
+        Este email foi enviado automaticamente pelo <strong>CRM TRY MEDIA</strong>.<br/>
+        Não respondas a este email — é gerado automaticamente.<br/>
+        <a href="#">Gerir preferências de notificação</a>
+      </p>
+    </div>
+  </div>
+</body>
+</html>

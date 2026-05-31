@@ -1,33 +1,48 @@
-import { NavLink } from 'react-router-dom'
+import { NavLink, useNavigate } from 'react-router-dom'
 import { useSidebar } from '../contexts/SidebarContext'
 import { useAuth } from '../contexts/AuthContext'
 import './Sidebar.css'
 
 export default function Sidebar() {
   const { expanded, toggle } = useSidebar()
-  const { isAdmin } = useAuth()
+  const { isAdmin, user, logout } = useAuth()
+  const navigate = useNavigate()
 
   const navItems = [
-    { to: '/pipeline',      icon: 'bi-people-fill',         label: 'Clientes'       },
-    { to: '/dashboard',     icon: 'bi-bar-chart-fill',      label: 'Dashboard'      },
-    { to: '/reunioes',      icon: 'bi-calendar3',           label: 'Reuniões'       },
-    { to: '/relatorios',    icon: 'bi-clipboard-check-fill', label: 'Relatórios', adminOnly: true },
-    { to: '/configuracoes', icon: 'bi-gear',                label: 'Configurações', adminOnly: true },
+    { to: '/pipeline', icon: 'bi-funnel-fill', label: 'Leads' },
+    { to: '/clientes', icon: 'bi-people-fill', label: 'Clientes' },
+    { to: '/dashboard', icon: 'bi-bar-chart-fill', label: 'Dashboard' },
+    { to: '/reunioes', icon: 'bi-calendar3', label: 'Reuniões' },
+    { to: '/relatorios', icon: 'bi-clipboard-check-fill', label: 'Relatórios', adminOnly: true },
+    { to: '/configuracoes', icon: 'bi-gear', label: 'Configurações', adminOnly: true },
   ]
+
+  function handleLogout() {
+    logout()
+    navigate('/login')
+  }
+
+  const iniciais = user?.nome
+    ? user.nome
+        .split(' ')
+        .slice(0, 2)
+        .map(nome => nome[0])
+        .join('')
+        .toUpperCase()
+    : '?'
 
   return (
     <nav className={`sidebar ${expanded ? 'expandido' : ''}`}>
-
-      {/* Botão expandir */}
+      
       <div className="sidebar-toggle" onClick={toggle}>
         <i className="bi bi-list"></i>
         <span className="sidebar-label">Menu</span>
       </div>
 
-      {/* Itens de navegação */}
       <ul className="sidebar-nav">
         {navItems.map(item => {
           if (item.adminOnly && !isAdmin()) return null
+
           return (
             <li key={item.to}>
               <NavLink
@@ -39,12 +54,49 @@ export default function Sidebar() {
                 <span className="sidebar-icon">
                   <i className={`bi ${item.icon}`}></i>
                 </span>
-                <span className="sidebar-text">{item.label}</span>
+
+                <span className="sidebar-text">
+                  {item.label}
+                </span>
               </NavLink>
             </li>
           )
         })}
       </ul>
+
+      <div className="sidebar-footer">
+
+        <div className="sidebar-user">
+
+          <div className="sidebar-avatar">
+            {iniciais}
+          </div>
+
+          <div className="sidebar-user-info">
+            <span className="sidebar-user-nome">
+              {user?.nome || 'Utilizador'}
+            </span>
+
+            <span className="sidebar-user-perfil">
+              {user?.perfil || user?.cargo || ''}
+            </span>
+          </div>
+
+        </div>
+
+        <button
+          type="button"
+          className="sidebar-logout"
+          onClick={handleLogout}
+        >
+          <i className="bi bi-box-arrow-right"></i>
+
+          <span className="sidebar-text">
+            Logout
+          </span>
+        </button>
+
+      </div>
 
     </nav>
   )
